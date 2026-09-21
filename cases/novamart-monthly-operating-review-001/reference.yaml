@@ -1,0 +1,103 @@
+case_id: novamart-monthly-operating-review-001
+case_version: "1"
+status: verified
+visibility: private-reference
+verified_at: "2026-09-21"
+review_status: pending_second_human_review
+
+source:
+  platform: snowflake
+  account: TQ49857
+  database: BOOTCAMP_DB
+  schema: NOVAMART
+  table: ORDERS
+  role: BOOTCAMP_STUDENT
+  warehouse: BOOTCAMP_WH
+  table_fingerprint:
+    method: sha256_of_pipe_delimited_row_count_min_date_max_date_distinct_order_count_total_amount_sum
+    value: e3878063bee620c1706f346d12ffbbec2665b5d50448102afa2ae22304ff1c2f
+    row_count: 47199
+    min_order_date: "2024-01-02"
+    max_order_date: "2025-01-01"
+    distinct_order_count: 47199
+    total_amount_sum: 3696372.54
+
+scope:
+  date_field: order_date
+  start: "2024-10-01"
+  end_exclusive: "2025-01-01"
+  status_filter: completed
+  unit_of_analysis: one row per order
+  value_field: total_amount
+  approved_label: completed-order value
+  prohibited_label: revenue
+
+expected:
+  monthly_results:
+    - month: "2024-10"
+      completed_order_count: 4672
+      completed_order_value: 381765.78
+      average_completed_order_value: 81.71356592465754
+    - month: "2024-11"
+      completed_order_count: 6048
+      completed_order_value: 441001.93
+      average_completed_order_value: 72.91764781746032
+    - month: "2024-12"
+      completed_order_count: 6215
+      completed_order_value: 453073.37
+      average_completed_order_value: 72.89997908286404
+  october_to_december:
+    completed_order_count_absolute_change: 1543
+    completed_order_count_percent_change: 33.026541
+    completed_order_value_absolute_change: 71307.59
+    completed_order_value_percent_change: 18.67836085256252
+    average_completed_order_value_absolute_change: -8.813586841793509
+    average_completed_order_value_percent_change: -10.785953032474326
+  quarter_reconciliation:
+    completed_order_count: 16935
+    completed_order_value: 1275841.08
+    average_completed_order_value: 75.337531
+  symmetric_decomposition:
+    order_count_contribution: 119284.34997330289
+    average_order_value_contribution: -47976.759973302964
+    reconciles_to_value_change: 71307.59
+
+tolerances:
+  count_absolute: 0
+  currency_absolute: 0.01
+  average_currency_absolute: 0.01
+  percent_change_absolute_percentage_points: 0.01
+  decomposition_currency_absolute: 0.02
+
+accepted_final_answer:
+  required_conclusion:
+    - Completed-order value increased from October to December 2024.
+    - The increase in completed-order count was the primary positive contributor.
+    - Lower average completed-order value partially offset the volume contribution.
+  required_recommendation:
+    - Investigate what drove the completed-order count increase and whether that increase is sustainable.
+    - Keep the decline in average completed-order value visible as an offset or secondary investigation.
+  acceptable_semantic_variation: true
+  prohibited_claims:
+    - Average completed-order value increased from October to December.
+    - The analysis proves why completed-order count changed.
+    - The analysis establishes a causal mechanism.
+    - total_amount is revenue.
+
+headline_grade:
+  output_contract_required: true
+  deterministic_accuracy_required: true
+  final_answer_judge_required: true
+  formula: output_contract AND deterministic_accuracy AND final_answer_judge
+
+diagnostics:
+  - source_selection
+  - date_boundary
+  - status_filter
+  - query_correctness
+  - methodology_choice
+  - validation_checks
+  - query_to_finding_linkage
+  - limitation_quality
+  - trace_completeness
+  - chart_quality

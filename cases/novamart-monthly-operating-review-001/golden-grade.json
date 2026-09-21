@@ -1,0 +1,152 @@
+{
+  "case_id": "novamart-monthly-operating-review-001",
+  "output_contract": 1,
+  "deterministic_accuracy": 1,
+  "final_answer_judge": "not_run",
+  "case_pass": 0,
+  "contract_checks": [
+    {
+      "id": "required_files",
+      "passed": true,
+      "detail": "missing=[]"
+    },
+    {
+      "id": "result_json_parses",
+      "passed": true,
+      "detail": "valid JSON"
+    },
+    {
+      "id": "result_required_sections",
+      "passed": true,
+      "detail": "missing=[]"
+    },
+    {
+      "id": "case_id",
+      "passed": true,
+      "detail": "novamart-monthly-operating-review-001"
+    },
+    {
+      "id": "period",
+      "passed": true,
+      "detail": "{'start': '2024-10-01', 'end_exclusive': '2025-01-01'}"
+    },
+    {
+      "id": "monthly_csv_rows",
+      "passed": true,
+      "detail": "rows=3"
+    },
+    {
+      "id": "monthly_csv_columns",
+      "passed": true,
+      "detail": "columns=['average_completed_order_value', 'completed_order_count', 'completed_order_value', 'month']"
+    },
+    {
+      "id": "chart_data_matches_monthly_csv",
+      "passed": true,
+      "detail": "exact CSV row comparison"
+    },
+    {
+      "id": "chart_is_readable_png",
+      "passed": true,
+      "detail": "size=1632x774"
+    },
+    {
+      "id": "brief_is_nonempty",
+      "passed": true,
+      "detail": "characters=829"
+    },
+    {
+      "id": "calculation_is_read_only",
+      "passed": true,
+      "detail": "DML and DDL keyword scan"
+    }
+  ],
+  "accuracy_checks": [
+    {
+      "id": "three_months",
+      "passed": true,
+      "detail": "rows=3"
+    },
+    {
+      "id": "month_set",
+      "passed": true,
+      "detail": "months=['2024-10', '2024-11', '2024-12']"
+    },
+    {
+      "id": "2024-10_count",
+      "passed": true,
+      "detail": "4672"
+    },
+    {
+      "id": "2024-10_value",
+      "passed": true,
+      "detail": "381765.78"
+    },
+    {
+      "id": "2024-10_average",
+      "passed": true,
+      "detail": "81.71356592465754"
+    },
+    {
+      "id": "2024-11_count",
+      "passed": true,
+      "detail": "6048"
+    },
+    {
+      "id": "2024-11_value",
+      "passed": true,
+      "detail": "441001.93"
+    },
+    {
+      "id": "2024-11_average",
+      "passed": true,
+      "detail": "72.91764781746032"
+    },
+    {
+      "id": "2024-12_count",
+      "passed": true,
+      "detail": "6215"
+    },
+    {
+      "id": "2024-12_value",
+      "passed": true,
+      "detail": "453073.37"
+    },
+    {
+      "id": "2024-12_average",
+      "passed": true,
+      "detail": "72.89997908286404"
+    },
+    {
+      "id": "completed_order_count_absolute_change",
+      "passed": true,
+      "detail": "1543"
+    },
+    {
+      "id": "completed_order_count_percent_change",
+      "passed": true,
+      "detail": "33.026541"
+    },
+    {
+      "id": "completed_order_value_absolute_change",
+      "passed": true,
+      "detail": "71307.59"
+    },
+    {
+      "id": "completed_order_value_percent_change",
+      "passed": true,
+      "detail": "18.67836085256252"
+    },
+    {
+      "id": "average_completed_order_value_absolute_change",
+      "passed": true,
+      "detail": "-8.813586841793509"
+    },
+    {
+      "id": "average_completed_order_value_percent_change",
+      "passed": true,
+      "detail": "-10.785953032474326"
+    }
+  ],
+  "note": "The case cannot pass until the separate binary final-answer judge runs."
+}

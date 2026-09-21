@@ -1,0 +1,73 @@
+{
+  "case_id": "novamart-monthly-operating-review-001",
+  "period": {
+    "start": "2024-10-01",
+    "end_exclusive": "2025-01-01"
+  },
+  "monthly_results": [
+    {
+      "month": "2024-10",
+      "completed_order_count": 4672,
+      "completed_order_value": 381765.78,
+      "average_completed_order_value": 81.71356592465754
+    },
+    {
+      "month": "2024-11",
+      "completed_order_count": 6048,
+      "completed_order_value": 441001.93,
+      "average_completed_order_value": 72.91764781746032
+    },
+    {
+      "month": "2024-12",
+      "completed_order_count": 6215,
+      "completed_order_value": 453073.37,
+      "average_completed_order_value": 72.89997908286404
+    }
+  ],
+  "october_to_december": {
+    "completed_order_count_absolute_change": 1543,
+    "completed_order_count_percent_change": 33.026541,
+    "completed_order_value_absolute_change": 71307.59,
+    "completed_order_value_percent_change": 18.67836085256252,
+    "average_completed_order_value_absolute_change": -8.813586841793509,
+    "average_completed_order_value_percent_change": -10.785953032474326
+  },
+  "final_answer": {
+    "conclusion": "Completed-order value increased because completed-order count growth more than offset the decline in average completed-order value.",
+    "recommended_next_step": "Investigate what drove the completed-order count increase and whether it is sustainable, while keeping lower average completed-order value visible as a secondary investigation.",
+    "supporting_facts": [
+      "Completed-order count increased 33.03% from October to December.",
+      "Completed-order value increased 18.68% from October to December.",
+      "Average completed-order value decreased 10.79% from October to December."
+    ],
+    "important_limitation": "This descriptive analysis does not establish why either metric changed."
+  },
+  "methodology": {
+    "analysis_type": "descriptive",
+    "population": "Orders with status exactly completed and order_date from 2024-10-01 inclusive to 2025-01-01 exclusive.",
+    "date_field": "order_date",
+    "filters": [
+      "status = completed",
+      "order_date >= 2024-10-01",
+      "order_date < 2025-01-01"
+    ],
+    "calculation_summary": "Group completed orders by calendar month, count rows, sum total_amount, calculate average total_amount, and compare October with December.",
+    "validation_checks": [
+      "Confirmed one row per order_id in the source table.",
+      "Reconciled monthly results with quarter totals.",
+      "Repeated the calculation with an independent conditional aggregation."
+    ],
+    "assumptions": [
+      "order_date is the governing date for the review.",
+      "total_amount is completed-order value and is not labeled revenue."
+    ]
+  },
+  "artifacts": {
+    "monthly_results": "monthly-results.csv",
+    "brief": "brief.md",
+    "chart": "chart.png",
+    "chart_data": "chart-data.csv",
+    "calculation": "calculation.sql"
+  }
+}
+
