@@ -1,10 +1,26 @@
-# AI Analyst private evaluation references
+# AI Analyst course evaluations
 
-This repository stores private reference answers, reviewed reference queries, human labels, and private grader configuration for AI Analyst evaluations.
+This repository stores course development references, reviewed reference queries, human labels, and grader configuration for AI Analyst evaluations.
 
-It must not be cloned into a student workspace or exposed to the system being evaluated. A sibling checkout on the same accessible filesystem is not a security boundary for a code-enabled evaluation process.
+Do not clone it into the AI Analyst repository or expose it before the first blind run is locked. After release, it becomes the shared development evaluation set. A sibling checkout on the same accessible filesystem is not a security boundary for a code-enabled evaluation process.
 
-Public tasks, output schemas, and runner code belong in `ai-analyst`. Private references are applied only after an evaluated output has been locked.
+Public tasks, output schemas, and run management belong in `ai-analyst`. References are applied only after an evaluated output has been locked.
+
+## Grade a locked run
+
+From this repository:
+
+```bash
+python3 -m course_evals grade --run ../ai-analyst/working/evals/runs/<run-id>
+```
+
+The grader verifies the artifact hashes, runs deterministic checks, runs the binary final-answer judge, and writes student-safe grades and reports back to that run. It never edits the locked submission.
+
+## Development versus held out
+
+The first course run should be completed and locked before students receive this repository. After release, these references are intentionally visible so students can diagnose failures and improve their systems.
+
+Do not describe later runs of these cases as held out. A company-grade held-out set should remain in a separate repository or service that the evaluated system cannot access. It should be used only to test whether improvements generalize beyond the development cases.
 
 ## Current cases
 

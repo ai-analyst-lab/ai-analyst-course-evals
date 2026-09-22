@@ -43,6 +43,28 @@ def load_csv(path: Path) -> list[dict[str, str]]:
         return list(csv.DictReader(handle))
 
 
+def rows_match(left: list[dict[str, Any]], right: list[dict[str, Any]]) -> bool:
+    if len(left) != len(right):
+        return False
+    left_by_month = {str(row.get("month")): row for row in left}
+    right_by_month = {str(row.get("month")): row for row in right}
+    if set(left_by_month) != set(right_by_month):
+        return False
+    for month, left_row in left_by_month.items():
+        right_row = right_by_month[month]
+        if not close(left_row.get("completed_order_count"), right_row.get("completed_order_count"), 0):
+            return False
+        if not close(left_row.get("completed_order_value"), right_row.get("completed_order_value"), 0.01):
+            return False
+        if not close(
+            left_row.get("average_completed_order_value"),
+            right_row.get("average_completed_order_value"),
+            0.01,
+        ):
+            return False
+    return True
+
+
 def grade(output_dir: Path) -> dict[str, Any]:
     contract_checks: list[dict[str, Any]] = []
     accuracy_checks: list[dict[str, Any]] = []
@@ -111,7 +133,48 @@ def grade(output_dir: Path) -> dict[str, Any]:
         bool(csv_rows) and required_columns <= set(csv_rows[0]),
         f"columns={sorted(csv_rows[0]) if csv_rows else []}",
     )
-    record(contract_checks, "chart_data_matches_monthly_csv", chart_rows == csv_rows, "exact CSV row comparison")
+    record(
+        contract_checks,
+        "chart_data_matches_monthly_csv",
+        rows_match(chart_rows, csv_rows),
+        "month-aligned numerical comparison",
+    )
+    result_rows = result.get("monthly_results", [])
+    record(
+        contract_checks,
+        "monthly_csv_matches_result_json",
+        isinstance(result_rows, list) and rows_match(csv_rows, result_rows),
+        "month-aligned numerical comparison",
+    )
+    final_answer = result.get("final_answer") or {}
+    required_answer_fields = {
+        "conclusion",
+        "recommended_next_step",
+        "supporting_facts",
+        "important_limitation",
+    }
+    record(
+        contract_checks,
+        "final_answer_fields",
+        isinstance(final_answer, dict) and required_answer_fields <= set(final_answer),
+        f"missing={sorted(required_answer_fields - set(final_answer)) if isinstance(final_answer, dict) else sorted(required_answer_fields)}",
+    )
+    methodology = result.get("methodology") or {}
+    required_methodology_fields = {
+        "analysis_type",
+        "population",
+        "date_field",
+        "filters",
+        "calculation_summary",
+        "validation_checks",
+        "assumptions",
+    }
+    record(
+        contract_checks,
+        "methodology_fields",
+        isinstance(methodology, dict) and required_methodology_fields <= set(methodology),
+        f"missing={sorted(required_methodology_fields - set(methodology)) if isinstance(methodology, dict) else sorted(required_methodology_fields)}",
+    )
 
     try:
         with Image.open(output_dir / "chart.png") as image:
@@ -129,7 +192,6 @@ def grade(output_dir: Path) -> dict[str, Any]:
     record(contract_checks, "calculation_is_read_only", forbidden_sql is None, "DML and DDL keyword scan")
 
     expected_rows = REFERENCE["expected"]["monthly_results"]
-    result_rows = result.get("monthly_results", [])
     record(accuracy_checks, "three_months", len(result_rows) == 3, f"rows={len(result_rows)}")
     expected_by_month = {row["month"]: row for row in expected_rows}
     result_by_month = {str(row.get("month")): row for row in result_rows if isinstance(row, dict)}
