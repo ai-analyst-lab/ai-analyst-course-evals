@@ -1,0 +1,120 @@
+schema_version: '1'
+case_id: novamart-search-session-009
+case_version: '1'
+artifact_contract:
+  required_files:
+  - result.json
+  - results.csv
+  - brief.md
+  - chart.png
+  - chart-data.csv
+  - calculation.sql
+  exact_file_set: true
+  result_json:
+    path: result.json
+    case_id: novamart-search-session-009
+    required_sections:
+    - case_id
+    - results
+    - final_answer
+    - methodology
+    - artifacts
+  csv:
+  - id: results
+    path: results.csv
+    columns:
+    - search_group
+    - session_count
+    - purchasing_session_count
+    - completed_order_session_rate_pct
+    min_rows: 1
+    max_rows: 50
+  - id: chart_data
+    path: chart-data.csv
+    columns:
+    - search_group
+    - session_count
+    - purchasing_session_count
+    - completed_order_session_rate_pct
+    min_rows: 1
+    max_rows: 50
+  image:
+    path: chart.png
+    min_width: 400
+    min_height: 250
+  text:
+    path: brief.md
+    min_characters: 100
+query_outputs:
+- output_id: results
+  submission_sql: calculation.sql
+  reference_sql: reference.sql
+  submitted_table: results.csv
+  allowed_sources:
+  - BOOTCAMP_DB.NOVAMART.SESSIONS
+  - BOOTCAMP_DB.NOVAMART.EVENTS
+  - BOOTCAMP_DB.NOVAMART.ORDERS
+  timeout_seconds: 120
+  max_rows: 500
+  comparison:
+    mode: keyed_table
+    keys:
+    - search_group
+    columns: &id001
+      search_group:
+        type: string
+      session_count:
+        type: integer
+      purchasing_session_count:
+        type: integer
+      completed_order_session_rate_pct:
+        type: decimal
+        absolute_tolerance: 0.0001
+cross_artifact_tables:
+- id: chart_data_matches_results
+  left:
+    type: csv
+    path: results.csv
+  right:
+    type: csv
+    path: chart-data.csv
+  comparison:
+    mode: keyed_table
+    keys:
+    - search_group
+    columns: *id001
+- id: result_json_matches_results
+  left:
+    type: csv
+    path: results.csv
+  right:
+    type: json_table
+    path: result.json
+    field: results
+  comparison:
+    mode: keyed_table
+    keys:
+    - search_group
+    columns: *id001
+model_graders:
+- id: final_answer.v1
+  rubric: course_evals/graders/model/final_answer/v1/rubric.md
+  evidence:
+    result_json_field: final_answer
+    brief: brief.md
+  criteria_reference_field: accepted_final_answer
+  blocking: true
+diagnostics:
+- source_selection
+- population
+- date_boundary
+- query_correctness
+- validation_checks
+- query_to_finding_linkage
+- trace_completeness
+headline:
+  required:
+  - artifact_contract
+  - sql_result
+  - cross_artifact_consistency
+  - final_answer.v1

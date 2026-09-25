@@ -1,0 +1,77 @@
+case_id: novamart-category-profit-011
+case_version: '1'
+status: proposed
+visibility: private-reference
+verified_at: '2026-09-24'
+review_status: computationally_verified_pending_instructor_review
+slices:
+  domain: merchandising
+  task_type: profitability_review
+  complexity: high
+  data_shape: multi_table
+  primary_risk: join_grain
+source:
+  platform: snowflake
+  database: BOOTCAMP_DB
+  schema: NOVAMART
+  tables:
+  - ORDERS
+  - ORDER_ITEMS
+  - PRODUCTS
+  table_fingerprint:
+    method: sha256_of_ordered_table_row_counts
+    value: fdeb62d623a6200aa9f3d5c05408be1ffe4714d25084f5e17b8558a24c05d3a3
+expected:
+  results:
+  - category: beauty
+    units: 4773
+    merchandise_value: 184892.69
+    merchandise_cost: 114432.99
+    merchandise_gross_profit: 70459.7
+    gross_margin_pct: 38.11
+  - category: books
+    units: 2668
+    merchandise_value: 98291.56
+    merchandise_cost: 57914.98
+    merchandise_gross_profit: 40376.58
+    gross_margin_pct: 41.08
+  - category: clothing
+    units: 7536
+    merchandise_value: 314989.8
+    merchandise_cost: 195447.83
+    merchandise_gross_profit: 119541.97
+    gross_margin_pct: 37.95
+  - category: electronics
+    units: 6513
+    merchandise_value: 251237.75
+    merchandise_cost: 155806.59
+    merchandise_gross_profit: 95431.16
+    gross_margin_pct: 37.98
+  - category: home
+    units: 5001
+    merchandise_value: 217511.68
+    merchandise_cost: 132583.36
+    merchandise_gross_profit: 84928.32
+    gross_margin_pct: 39.05
+  - category: sports
+    units: 2852
+    merchandise_value: 110843.33
+    merchandise_cost: 66102.15
+    merchandise_gross_profit: 44741.18
+    gross_margin_pct: 40.36
+accepted_final_answer:
+  required_conclusion:
+  - The answer correctly identifies clothing as the highest observed merchandise gross profit and reports
+    the reviewed values without material contradiction.
+  required_recommendation:
+  - Investigate volume, product mix, discounting, and margin rate in the highest-profit category before
+    changing assortment.
+  acceptable_semantic_variation: true
+  prohibited_claims:
+  - The descriptive result proves a causal explanation.
+  - The analysis establishes a business target that was not supplied.
+headline_grade:
+  output_contract_required: true
+  deterministic_accuracy_required: true
+  final_answer_judge_required: true
+  formula: output_contract AND deterministic_accuracy AND final_answer_judge

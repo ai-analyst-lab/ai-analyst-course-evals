@@ -4,15 +4,21 @@ from __future__ import annotations
 
 import hashlib
 import html
-import importlib.util
 import json
 import subprocess
-import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
 
 import yaml
+
+from .graders.deterministic.artifact_contract import grade_artifact_contract
+from .graders.deterministic.cross_artifact import csv_result, grade_cross_table, json_table_result
+from .graders.deterministic.sql.compare_v1 import compare_results
+from .graders.deterministic.sql.diagnostics_v1 import diagnose_sql
+from .graders.deterministic.sql.execute_v1 import SnowflakeExecutor
+from .graders.deterministic.sql.safety_v1 import inspect_sql
+from .runners.model import run_model_judge
 
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -89,10 +95,29 @@ def verify_lock(trial_root: Path) -> tuple[dict[str, Any], Path]:
         raise ValueError("artifact manifest bundle digest is invalid")
     if bundle_digest != trial.get("artifact_bundle_digest"):
         raise ValueError("trial bundle digest does not match the artifact manifest")
+    trace_root = trial_root / "trace"
+    trace_manifest_path = trace_root / "manifest.json"
+    if not trace_manifest_path.is_file():
+        raise ValueError("locked trial is missing its trace manifest")
+    trace_manifest = read_json(trace_manifest_path)
+    trace_observed = []
+    for record in trace_manifest.get("files") or []:
+        path = trace_root / record["path"]
+        if not path.is_file():
+            raise ValueError(f"locked trace artifact is missing: {record['path']}")
+        actual = {"path": record["path"], "sha256": digest_file(path), "bytes": path.stat().st_size}
+        if actual != record:
+            raise ValueError(f"locked trace artifact changed: {record['path']}")
+        trace_observed.append(actual)
+    trace_digest = digest_payload(trace_observed)
+    if trace_digest != trace_manifest.get("bundle_digest"):
+        raise ValueError("trace manifest bundle digest is invalid")
+    if trace_digest != trial.get("trace_bundle_digest"):
+        raise ValueError("trial trace digest does not match the trace manifest")
     return trial, submission
 
 
-def load_case(case_id: str, case_version: str) -> tuple[Path, dict[str, Any]]:
+def load_case(case_id: str, case_version: str) -> tuple[Path, dict[str, Any], dict[str, Any]]:
     case_root = REPO_ROOT / "cases" / case_id
     reference_path = case_root / "reference.yaml"
     if not reference_path.is_file():
@@ -102,99 +127,65 @@ def load_case(case_id: str, case_version: str) -> tuple[Path, dict[str, Any]]:
         raise ValueError(
             f"course reference version {reference.get('case_version')} does not match run version {case_version}"
         )
-    return case_root, reference
+    grading_path = case_root / "grading.yaml"
+    if not grading_path.is_file():
+        raise ValueError(f"course grading configuration is missing for {case_id}")
+    grading = yaml.safe_load(grading_path.read_text(encoding="utf-8")) or {}
+    if str(grading.get("case_version")) != str(case_version):
+        raise ValueError("grading configuration version does not match the run")
+    return case_root, reference, grading
 
 
-def load_deterministic_grader(case_root: Path):
-    path = case_root / "grade_submission.py"
-    spec = importlib.util.spec_from_file_location(f"course_grade_{case_root.name}", path)
-    if spec is None or spec.loader is None:
-        raise ValueError(f"cannot load deterministic grader: {path}")
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module.grade
+def _model_evidence(submission: Path, spec: dict[str, Any]) -> dict[str, Any]:
+    mapping = spec.get("evidence") or {}
+    evidence: dict[str, Any] = {}
+    if mapping.get("result_json_field"):
+        result = read_json(submission / "result.json")
+        field = mapping["result_json_field"]
+        evidence[field] = result.get(field)
+    if mapping.get("brief"):
+        evidence["brief"] = (submission / mapping["brief"]).read_text(encoding="utf-8")
+    if mapping.get("files"):
+        for path in mapping["files"]:
+            evidence[path] = (submission / path).read_text(encoding="utf-8")
+    return evidence
 
 
-def run_llm_judge(
+def run_configured_model_graders(
     *,
-    case_root: Path,
     submission: Path,
     reference: dict[str, Any],
+    grading: dict[str, Any],
     model: str,
-) -> dict[str, Any]:
-    contract_path = case_root / "final-answer-judge.md"
-    contract = contract_path.read_text(encoding="utf-8")
-    result = read_json(submission / "result.json")
-    student_input = {
-        "final_answer": result.get("final_answer"),
-        "brief": (submission / "brief.md").read_text(encoding="utf-8"),
-    }
-    private_criteria = {
-        "required_conclusion": reference["accepted_final_answer"]["required_conclusion"],
-        "required_recommendation": reference["accepted_final_answer"]["required_recommendation"],
-        "prohibited_claims": reference["accepted_final_answer"]["prohibited_claims"],
-    }
-    prompt = (
-        contract
-        + "\n\nREVIEWED PRIVATE CRITERIA:\n"
-        + json.dumps(private_criteria, indent=2)
-        + "\n\nSTUDENT OUTPUT:\n"
-        + json.dumps(student_input, indent=2)
-    )
-    output_schema = {
-        "type": "object",
-        "properties": {
-            "pass": {"type": "integer", "enum": [0, 1]},
-            "reason": {"type": "string"},
-        },
-        "required": ["pass", "reason"],
-        "additionalProperties": False,
-    }
-    with tempfile.TemporaryDirectory(prefix="ai-analyst-judge-") as workspace:
-        command = [
-            "claude",
-            "--print",
-            "--model",
-            model,
-            "--no-session-persistence",
-            "--output-format",
-            "json",
-            "--json-schema",
-            json.dumps(output_schema, separators=(",", ":")),
-            "--strict-mcp-config",
-            "--mcp-config",
-            '{"mcpServers":{}}',
-            "--permission-mode",
-            "dontAsk",
-            "--permission-prompts",
-            "none",
-            "--tools=",
-            "--allowedTools=",
-            prompt,
-        ]
-        process = subprocess.run(
-            command,
-            cwd=workspace,
-            capture_output=True,
-            text=True,
-            timeout=180,
-        )
-    if process.returncode != 0:
-        raise RuntimeError(f"final-answer judge failed: {process.stderr[-2000:]}")
-    envelope = json.loads(process.stdout)
-    verdict = envelope.get("structured_output")
-    if not isinstance(verdict, dict) or verdict.get("pass") not in {0, 1}:
-        raise ValueError("final-answer judge returned an invalid verdict")
-    return {
-        "grader_id": "final-answer-judge",
-        "grader_version": "1",
-        "model": model,
-        "prompt_sha256": hashlib.sha256(prompt.encode()).hexdigest(),
-        "contract_sha256": digest_file(contract_path),
-        "pass": int(verdict["pass"]),
-        "reason": student_safe_text(verdict["reason"]),
-        "graded_at": utc_now(),
-    }
+    override: Callable[..., dict[str, Any]] | None = None,
+) -> list[dict[str, Any]]:
+    records = []
+    for spec in grading.get("model_graders") or []:
+        if override:
+            judged = override(
+                case_root=REPO_ROOT / "cases" / reference["case_id"],
+                submission=submission,
+                reference=reference,
+                model=model,
+            )
+        else:
+            grader_id = spec["id"]
+            version = grader_id.rsplit(".v", 1)[-1] if ".v" in grader_id else "1"
+            rubric_path = REPO_ROOT / spec["rubric"]
+            criteria_field = spec["criteria_reference_field"]
+            judged = run_model_judge(
+                rubric_path=rubric_path,
+                evidence=_model_evidence(submission, spec),
+                criteria=reference[criteria_field],
+                model=model,
+                grader_id=grader_id,
+                grader_version=version,
+            )
+        judged["reason"] = student_safe_text(judged["reason"])
+        judged["graded_at"] = utc_now()
+        judged["blocking"] = bool(spec.get("blocking", False))
+        records.append(judged)
+    return records
 
 
 def render_reports(trial_root: Path, summary: dict[str, Any]) -> None:
@@ -254,12 +245,132 @@ table{{border-collapse:collapse;width:100%}}td,th{{padding:10px;border-bottom:1p
     (trial_root / "student-report.html").write_text(document, encoding="utf-8")
 
 
+def _project_root(manifest: dict[str, Any], run_root: Path) -> Path:
+    configured = manifest.get("project_root")
+    if configured and Path(configured).is_dir():
+        return Path(configured).resolve()
+    for parent in run_root.parents:
+        if (parent / ".env").is_file() and (parent / "helpers").is_dir():
+            return parent
+    raise ValueError("cannot locate the AI Analyst project root for Snowflake execution")
+
+
+def _grade_query_outputs(
+    *,
+    submission: Path,
+    case_root: Path,
+    grading: dict[str, Any],
+    manifest: dict[str, Any],
+    run_root: Path,
+    executor: Any | None,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
+    safety_grades: list[dict[str, Any]] = []
+    result_grades: list[dict[str, Any]] = []
+    diagnostic_grades: list[dict[str, Any]] = []
+    for output in grading.get("query_outputs") or []:
+        output_id = output["output_id"]
+        candidate_sql = (submission / output["submission_sql"]).read_text(encoding="utf-8")
+        reference_sql = (case_root / output["reference_sql"]).read_text(encoding="utf-8")
+        safety = inspect_sql(
+            candidate_sql,
+            allowed_sources=output.get("allowed_sources") or [],
+            prohibited_functions=output.get("prohibited_functions") or [],
+        )
+        safety_record = {
+            "grader_id": "sql.safety.v1",
+            "grader_version": "1",
+            "output_id": output_id,
+            "submission_sha256": hashlib.sha256(candidate_sql.encode()).hexdigest(),
+            **safety.as_dict(),
+        }
+        safety_grades.append(safety_record)
+        diagnostic_grades.append(
+            diagnose_sql(
+                candidate_sql,
+                reference_sql,
+                {
+                    "expected_sources": output.get("allowed_sources") or [],
+                    "declared": grading.get("diagnostics") or [],
+                    "rules": output.get("diagnostic_rules") or {},
+                },
+            )
+        )
+        if not safety.passed:
+            result_grades.append({
+                "grader_id": f"sql.result.{output['comparison']['mode']}.v1",
+                "grader_version": "1",
+                "output_id": output_id,
+                "pass": 0,
+                "status": "not_run",
+                "reason": "Candidate SQL failed the safety gate.",
+                "mismatches": [{"code": "sql_safety", "violations": list(safety.violations)}],
+            })
+            continue
+        active_executor = executor or SnowflakeExecutor(
+            project_root=_project_root(manifest, run_root),
+            timeout_seconds=int(output.get("timeout_seconds", 60)),
+            max_rows=int(output.get("max_rows", 5000)),
+            query_tag=f"ai_analyst_eval:{manifest.get('run_id')}:{output_id}",
+        )
+        try:
+            actual = active_executor.execute(candidate_sql)
+            expected = active_executor.execute(reference_sql)
+            result = compare_results(actual, expected, output["comparison"])
+            result.update({
+                "output_id": output_id,
+                "candidate_query_id": actual.query_id,
+                "reference_query_id": expected.query_id,
+                "candidate_sql_sha256": hashlib.sha256(candidate_sql.encode()).hexdigest(),
+                "reference_sql_sha256": hashlib.sha256(reference_sql.encode()).hexdigest(),
+                "candidate_elapsed_ms": actual.elapsed_ms,
+                "reference_elapsed_ms": expected.elapsed_ms,
+            })
+            submitted_table = output.get("submitted_table")
+            if submitted_table:
+                artifact_result = compare_results(
+                    actual,
+                    csv_result(submission / submitted_table),
+                    output["comparison"],
+                )
+                artifact_result.update({
+                    "grader_id": "artifact.matches_executed_sql.v1",
+                    "output_id": output_id,
+                    "artifact": submitted_table,
+                    "candidate_query_id": actual.query_id,
+                })
+                result_grades.append(artifact_result)
+        except Exception as exc:
+            result = {
+                "grader_id": f"sql.result.{output['comparison']['mode']}.v1",
+                "grader_version": "1",
+                "output_id": output_id,
+                "pass": 0,
+                "status": "error",
+                "reason": student_safe_text(exc),
+                "mismatches": [],
+            }
+        result_grades.append(result)
+    return safety_grades, result_grades, diagnostic_grades
+
+
+def _artifact_table(submission: Path, spec: Any):
+    if isinstance(spec, str):
+        return csv_result(submission / spec)
+    kind = spec.get("type", "csv")
+    if kind == "csv":
+        return csv_result(submission / spec["path"])
+    if kind == "json_table":
+        return json_table_result(submission / spec["path"], spec["field"])
+    raise ValueError(f"unsupported artifact table type: {kind}")
+
+
 def grade_run(
     *,
     run_root: str | Path,
     trial_id: str | None = None,
     judge_model: str = "claude-opus-4-6",
     judge: Callable[..., dict[str, Any]] | None = None,
+    sql_executor: Any | None = None,
 ) -> dict[str, Any]:
     run_root = Path(run_root).resolve()
     manifest_path = run_root / "manifest.json"
@@ -269,32 +380,93 @@ def grade_run(
     if grades_root.exists() and any(grades_root.iterdir()):
         raise ValueError("this trial already has grade records; create a new run instead of overwriting them")
     trial, submission = verify_lock(trial_root)
-    case_root, reference = load_case(trial["case_id"], trial["case_version"])
+    case_root, reference, grading = load_case(trial["case_id"], trial["case_version"])
     data_fingerprint = manifest.get("data_fingerprint") or {}
     expected_data_fingerprint = reference["source"]["table_fingerprint"]["value"]
     if data_fingerprint.get("status") != "verified":
         raise ValueError("course grading requires a verified data snapshot fingerprint")
     if data_fingerprint.get("sha256") != expected_data_fingerprint:
         raise ValueError("run data fingerprint does not match the reviewed reference")
-    deterministic_grade = load_deterministic_grader(case_root)
-    deterministic = deterministic_grade(submission)
-
-    judge_function = judge or run_llm_judge
-    judge_result = judge_function(
+    artifact_grade = grade_artifact_contract(submission, grading["artifact_contract"])
+    safety_grades, sql_grades, sql_diagnostics = _grade_query_outputs(
+        submission=submission,
         case_root=case_root,
+        grading=grading,
+        manifest=manifest,
+        run_root=run_root,
+        executor=sql_executor,
+    )
+    cross_grades = []
+    for spec in grading.get("cross_artifact_tables") or []:
+        left = _artifact_table(submission, spec["left"])
+        right = _artifact_table(submission, spec["right"])
+        record = grade_cross_table(left, right, spec["comparison"])
+        record["comparison_id"] = spec["id"]
+        cross_grades.append(record)
+
+    model_grades = run_configured_model_graders(
         submission=submission,
         reference=reference,
+        grading=grading,
         model=judge_model,
+        override=judge,
     )
     trace_manifest_path = trial_root / "trace" / "manifest.json"
     trace_manifest = read_json(trace_manifest_path) if trace_manifest_path.is_file() else {
         "complete": False,
         "missing": ["trace_manifest"],
     }
-    output_contract = int(deterministic["output_contract"])
-    deterministic_accuracy = int(deterministic["deterministic_accuracy"])
-    final_answer_judge = int(judge_result["pass"])
+    output_contract = int(artifact_grade["pass"])
+    sql_safety = int(all(record["passed"] for record in safety_grades))
+    sql_result = int(bool(sql_grades) and all(record["pass"] for record in sql_grades))
+    cross_artifact = int(all(record["pass"] for record in cross_grades))
+    deterministic_accuracy = int(sql_safety and sql_result and cross_artifact)
+    blocking_model_grades = [record for record in model_grades if record["blocking"]]
+    final_answer_judge = int(bool(blocking_model_grades) and all(record["pass"] for record in blocking_model_grades))
     case_pass = int(output_contract and deterministic_accuracy and final_answer_judge)
+    diagnostic_by_id: dict[str, dict[str, Any]] = {}
+    for diagnostic in sql_diagnostics:
+        for check in diagnostic.get("checks") or []:
+            diagnostic_by_id[check["id"]] = check
+    result_json = read_json(submission / "result.json")
+    validation_checks = (result_json.get("methodology") or {}).get("validation_checks") or []
+    trace_names = {record["path"] for record in trace_manifest.get("files") or []}
+    diagnostic_by_id["query_correctness"] = {
+        "id": "query_correctness",
+        "status": "pass" if sql_result else "fail",
+        "evidence": [record.get("output_id") for record in sql_grades],
+    }
+    diagnostic_by_id["validation_checks"] = {
+        "id": "validation_checks",
+        "status": "pass" if validation_checks else "fail",
+        "evidence": validation_checks,
+    }
+    linkage_present = any(name.startswith("query_log_") for name in trace_names) and (
+        any(name.startswith("findings_") for name in trace_names)
+        or any(name.startswith("trace_receipt_") for name in trace_names)
+    )
+    diagnostic_by_id["query_to_finding_linkage"] = {
+        "id": "query_to_finding_linkage",
+        "status": "pass" if linkage_present else "fail",
+        "evidence": sorted(trace_names),
+    }
+    diagnostic_by_id["trace_completeness"] = {
+        "id": "trace_completeness",
+        "status": "pass" if trace_manifest.get("complete") else "fail",
+        "missing": trace_manifest.get("missing") or [],
+    }
+    diagnostics_record = {
+        "grader_id": "analysis.diagnostics.v1",
+        "grader_version": "1",
+        "checks": [
+            diagnostic_by_id.get(name, {
+                "id": name,
+                "status": "unknown",
+                "reason": "No evidence rule is configured.",
+            })
+            for name in grading.get("diagnostics") or []
+        ],
+    }
     summary = {
         "schema_version": "1",
         "run_id": trial["run_id"],
@@ -305,15 +477,22 @@ def grade_run(
         "reference_version": str(reference["case_version"]),
         "reference_review_status": reference.get("review_status"),
         "output_contract": output_contract,
+        "sql_safety": sql_safety,
+        "sql_result": sql_result,
+        "cross_artifact_consistency": cross_artifact,
         "deterministic_accuracy": deterministic_accuracy,
         "final_answer_judge": final_answer_judge,
         "case_pass": case_pass,
-        "judge_reason": judge_result["reason"],
+        "judge_reason": " ".join(record["reason"] for record in blocking_model_grades),
         "grader_versions": {
-            "deterministic": "1",
-            "final_answer_judge": judge_result.get("grader_version", "1"),
-            "judge_model": judge_result.get("model", judge_model),
-            "judge_prompt_sha256": judge_result.get("prompt_sha256"),
+            "artifact_contract": artifact_grade.get("grader_version", "1"),
+            "sql": "1",
+            "final_answer_judge": ",".join(record.get("grader_version", "1") for record in blocking_model_grades),
+            "judge_model": ",".join(record.get("model", judge_model) for record in blocking_model_grades),
+            "judge_prompt_sha256": ",".join(
+                str(record.get("prompt_sha256") or record.get("rubric_sha256") or "")
+                for record in blocking_model_grades
+            ),
         },
         "diagnostics": {
             "trace_complete": bool(trace_manifest.get("complete")),
@@ -326,21 +505,37 @@ def grade_run(
         "trial_id": trial["trial_id"],
         "bundle_digest": trial["artifact_bundle_digest"],
         "pass": output_contract,
-        "checks": deterministic["contract_checks"],
+        "grader_id": artifact_grade["grader_id"],
+        "grader_version": artifact_grade["grader_version"],
+        "checks": artifact_grade["checks"],
     })
     write_json(grades_root / "deterministic-accuracy.json", {
         "run_id": trial["run_id"],
         "trial_id": trial["trial_id"],
         "bundle_digest": trial["artifact_bundle_digest"],
         "pass": deterministic_accuracy,
-        "checks": deterministic["accuracy_checks"],
+        "sql_safety": sql_safety,
+        "sql_result": sql_result,
+        "cross_artifact_consistency": cross_artifact,
     })
-    write_json(grades_root / "final-answer-judge.json", {
-        **judge_result,
-        "run_id": trial["run_id"],
-        "trial_id": trial["trial_id"],
-        "bundle_digest": trial["artifact_bundle_digest"],
+    for index, record in enumerate(safety_grades, start=1):
+        write_json(grades_root / f"sql-safety-{index}.json", record)
+    for index, record in enumerate(sql_grades, start=1):
+        write_json(grades_root / f"sql-result-{index}.json", record)
+    for index, record in enumerate(cross_grades, start=1):
+        write_json(grades_root / f"cross-artifact-{index}.json", record)
+    write_json(grades_root / "sql-diagnostics.json", {
+        **diagnostics_record,
+        "sql_records": sql_diagnostics,
     })
+    for index, record in enumerate(model_grades, start=1):
+        safe_id = str(record.get("grader_id", f"model-{index}")).replace(".", "-")
+        write_json(grades_root / f"model-judge-{safe_id}.json", {
+            **record,
+            "run_id": trial["run_id"],
+            "trial_id": trial["trial_id"],
+            "bundle_digest": trial["artifact_bundle_digest"],
+        })
     write_json(grades_root / "summary.json", summary)
     render_reports(trial_root, summary)
 

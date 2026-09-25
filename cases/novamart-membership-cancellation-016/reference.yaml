@@ -1,0 +1,54 @@
+case_id: novamart-membership-cancellation-016
+case_version: '1'
+status: proposed
+visibility: private-reference
+verified_at: '2026-09-24'
+review_status: computationally_verified_pending_instructor_review
+slices:
+  domain: membership
+  task_type: retention_review
+  complexity: medium
+  data_shape: single_table
+  primary_risk: population
+source:
+  platform: snowflake
+  database: BOOTCAMP_DB
+  schema: NOVAMART
+  tables:
+  - MEMBERSHIPS
+  table_fingerprint:
+    method: sha256_of_ordered_table_row_counts
+    value: fdeb62d623a6200aa9f3d5c05408be1ffe4714d25084f5e17b8558a24c05d3a3
+expected:
+  results:
+  - cancel_reason: competitor
+    ended_membership_count: 22
+    average_tenure_days: 13.27
+  - cancel_reason: not_using
+    ended_membership_count: 57
+    average_tenure_days: 14.46
+  - cancel_reason: other
+    ended_membership_count: 22
+    average_tenure_days: 13.68
+  - cancel_reason: price
+    ended_membership_count: 57
+    average_tenure_days: 11.39
+  - cancel_reason: unknown
+    ended_membership_count: 1205
+    average_tenure_days: 13.45
+accepted_final_answer:
+  required_conclusion:
+  - The answer correctly identifies not_using and price as tied for the highest observed ended membership
+    count and reports the reviewed values without material contradiction.
+  required_recommendation:
+  - Investigate the experiences and tenure distribution behind the largest stated reason while keeping
+    missing reasons separate.
+  acceptable_semantic_variation: true
+  prohibited_claims:
+  - The descriptive result proves a causal explanation.
+  - The analysis establishes a business target that was not supplied.
+headline_grade:
+  output_contract_required: true
+  deterministic_accuracy_required: true
+  final_answer_judge_required: true
+  formula: output_contract AND deterministic_accuracy AND final_answer_judge

@@ -1,0 +1,69 @@
+case_id: novamart-promotion-profitability-002
+case_version: "1"
+status: proposed
+visibility: private-reference
+verified_at: "2026-09-24"
+review_status: pending_second_human_review
+
+slices:
+  domain: marketing
+  task_type: decision_support
+  complexity: high
+  data_shape: multi_table
+
+source:
+  platform: snowflake
+  account: TQ49857
+  database: BOOTCAMP_DB
+  schema: NOVAMART
+  tables: [ORDERS, ORDER_ITEMS, PRODUCTS, PROMOTIONS]
+  role: BOOTCAMP_STUDENT
+  warehouse: BOOTCAMP_WH
+  table_fingerprint:
+    method: sha256_of_one_row_multi_table_profile
+    value: fe3770e913305ffb1917a1b2e8eb1fd449773c78b58bb730aecfb6eaa821fa84
+
+expected:
+  promotion_results:
+    - promo_name: Black Friday
+      start_date: "2024-11-25"
+      end_date: "2024-12-01"
+      promo_days: 7
+      completed_order_count: 2387
+      discounted_merchandise_value: 117239.00
+      merchandise_cost: 86793.53
+      merchandise_gross_profit: 30445.47
+      gross_profit_per_day: 4349.35
+    - promo_name: Holiday Sale
+      start_date: "2024-12-15"
+      end_date: "2024-12-31"
+      promo_days: 17
+      completed_order_count: 3520
+      discounted_merchandise_value: 220071.05
+      merchandise_cost: 152784.60
+      merchandise_gross_profit: 67286.45
+      gross_profit_per_day: 3958.03
+
+tolerances:
+  integer_absolute: 0
+  currency_absolute: 0.01
+
+accepted_final_answer:
+  required_conclusion:
+    - Holiday Sale produced more total completed-order merchandise gross profit.
+    - Black Friday produced more completed-order merchandise gross profit per promotion day.
+    - The two rankings differ because the promotions ran for different numbers of days.
+  required_recommendation:
+    - Investigate incremental demand, cannibalization, customer mix, and costs not represented in merchandise cost before choosing which promotion to repeat.
+  acceptable_semantic_variation: true
+  prohibited_claims:
+    - Black Friday or Holiday Sale caused the observed completed-order merchandise gross profit.
+    - The descriptive comparison proves which promotion should be repeated.
+    - Merchandise gross profit includes shipping, marketing spend, returns after completion, or every company cost.
+    - Order-level total_amount can be summed after the item-level join without protecting the order grain.
+
+headline_grade:
+  output_contract_required: true
+  deterministic_accuracy_required: true
+  final_answer_judge_required: true
+  formula: output_contract AND deterministic_accuracy AND final_answer_judge

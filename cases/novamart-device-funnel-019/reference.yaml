@@ -1,0 +1,59 @@
+case_id: novamart-device-funnel-019
+case_version: '1'
+status: proposed
+visibility: private-reference
+verified_at: '2026-09-24'
+review_status: computationally_verified_pending_instructor_review
+slices:
+  domain: product
+  task_type: funnel_review
+  complexity: high
+  data_shape: multi_table
+  primary_risk: event_grain
+source:
+  platform: snowflake
+  database: BOOTCAMP_DB
+  schema: NOVAMART
+  tables:
+  - SESSIONS
+  - EVENTS
+  - ORDERS
+  table_fingerprint:
+    method: sha256_of_ordered_table_row_counts
+    value: fdeb62d623a6200aa9f3d5c05408be1ffe4714d25084f5e17b8558a24c05d3a3
+expected:
+  results:
+  - device: android
+    session_count: 177808
+    product_view_sessions: 133177
+    add_to_cart_sessions: 41240
+    purchasing_sessions: 3877
+    completed_order_session_rate_pct: 2.1804
+  - device: ios
+    session_count: 224684
+    product_view_sessions: 168649
+    add_to_cart_sessions: 52331
+    purchasing_sessions: 5024
+    completed_order_session_rate_pct: 2.236
+  - device: web
+    session_count: 249024
+    product_view_sessions: 186552
+    add_to_cart_sessions: 58356
+    purchasing_sessions: 8034
+    completed_order_session_rate_pct: 3.2262
+accepted_final_answer:
+  required_conclusion:
+  - The answer correctly identifies android as the lowest observed completed order session rate pct and
+    reports the reviewed values without material contradiction.
+  required_recommendation:
+  - Investigate the stage-specific drop and traffic mix for the weakest device before changing the product
+    funnel.
+  acceptable_semantic_variation: true
+  prohibited_claims:
+  - The descriptive result proves a causal explanation.
+  - The analysis establishes a business target that was not supplied.
+headline_grade:
+  output_contract_required: true
+  deterministic_accuracy_required: true
+  final_answer_judge_required: true
+  formula: output_contract AND deterministic_accuracy AND final_answer_judge

@@ -1,0 +1,51 @@
+case_id: novamart-support-resolution-003
+case_version: '1'
+status: proposed
+visibility: private-reference
+verified_at: '2026-09-24'
+review_status: computationally_verified_pending_instructor_review
+slices:
+  domain: support
+  task_type: recurring_review
+  complexity: medium
+  data_shape: single_table
+  primary_risk: missingness
+source:
+  platform: snowflake
+  database: BOOTCAMP_DB
+  schema: NOVAMART
+  tables:
+  - SUPPORT_TICKETS
+  table_fingerprint:
+    method: sha256_of_ordered_table_row_counts
+    value: fdeb62d623a6200aa9f3d5c05408be1ffe4714d25084f5e17b8558a24c05d3a3
+expected:
+  results:
+  - month: 2024-10
+    ticket_count: 3023
+    resolved_ticket_count: 2872
+    median_resolution_hours: 24.32
+  - month: 2024-11
+    ticket_count: 3141
+    resolved_ticket_count: 2970
+    median_resolution_hours: 23.98
+  - month: 2024-12
+    ticket_count: 3583
+    resolved_ticket_count: 3429
+    median_resolution_hours: 24.32
+accepted_final_answer:
+  required_conclusion:
+  - The answer correctly identifies 2024-10 and 2024-12 as tied for the highest observed median resolution
+    hours and reports the reviewed values without material contradiction.
+  required_recommendation:
+  - Investigate category and severity mix in the slowest month while keeping unresolved tickets separate
+    from the resolved-ticket duration calculation.
+  acceptable_semantic_variation: true
+  prohibited_claims:
+  - The descriptive result proves a causal explanation.
+  - The analysis establishes a business target that was not supplied.
+headline_grade:
+  output_contract_required: true
+  deterministic_accuracy_required: true
+  final_answer_judge_required: true
+  formula: output_contract AND deterministic_accuracy AND final_answer_judge

@@ -1,9 +1,15 @@
 case_id: novamart-monthly-operating-review-001
 case_version: "1"
-status: verified
+status: proposed
 visibility: private-reference
 verified_at: "2026-09-21"
 review_status: pending_second_human_review
+
+slices:
+  domain: operations
+  task_type: recurring_review
+  complexity: low
+  data_shape: single_table
 
 source:
   platform: snowflake

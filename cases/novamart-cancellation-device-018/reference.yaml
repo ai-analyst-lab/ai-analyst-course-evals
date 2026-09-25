@@ -1,0 +1,51 @@
+case_id: novamart-cancellation-device-018
+case_version: '1'
+status: proposed
+visibility: private-reference
+verified_at: '2026-09-24'
+review_status: computationally_verified_pending_instructor_review
+slices:
+  domain: operations
+  task_type: segment_review
+  complexity: low
+  data_shape: single_table
+  primary_risk: denominator
+source:
+  platform: snowflake
+  database: BOOTCAMP_DB
+  schema: NOVAMART
+  tables:
+  - ORDERS
+  table_fingerprint:
+    method: sha256_of_ordered_table_row_counts
+    value: fdeb62d623a6200aa9f3d5c05408be1ffe4714d25084f5e17b8558a24c05d3a3
+expected:
+  results:
+  - device: android
+    order_count: 4532
+    cancelled_order_count: 434
+    cancelled_order_rate_pct: 9.58
+  - device: ios
+    order_count: 5857
+    cancelled_order_count: 572
+    cancelled_order_rate_pct: 9.77
+  - device: web
+    order_count: 9449
+    cancelled_order_count: 923
+    cancelled_order_rate_pct: 9.77
+accepted_final_answer:
+  required_conclusion:
+  - The answer correctly identifies ios and web as tied for the highest observed cancelled order rate
+    pct and reports the reviewed values without material contradiction.
+  required_recommendation:
+  - Investigate checkout failures, payment issues, traffic mix, and app or browser versions for the highest-rate
+    device.
+  acceptable_semantic_variation: true
+  prohibited_claims:
+  - The descriptive result proves a causal explanation.
+  - The analysis establishes a business target that was not supplied.
+headline_grade:
+  output_contract_required: true
+  deterministic_accuracy_required: true
+  final_answer_judge_required: true
+  formula: output_contract AND deterministic_accuracy AND final_answer_judge

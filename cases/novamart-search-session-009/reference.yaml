@@ -1,0 +1,49 @@
+case_id: novamart-search-session-009
+case_version: '1'
+status: proposed
+visibility: private-reference
+verified_at: '2026-09-24'
+review_status: computationally_verified_pending_instructor_review
+slices:
+  domain: product
+  task_type: funnel_review
+  complexity: high
+  data_shape: multi_table
+  primary_risk: join_grain
+source:
+  platform: snowflake
+  database: BOOTCAMP_DB
+  schema: NOVAMART
+  tables:
+  - SESSIONS
+  - EVENTS
+  - ORDERS
+  table_fingerprint:
+    method: sha256_of_ordered_table_row_counts
+    value: fdeb62d623a6200aa9f3d5c05408be1ffe4714d25084f5e17b8558a24c05d3a3
+expected:
+  results:
+  - search_group: did_not_search
+    session_count: 578380
+    purchasing_session_count: 13352
+    completed_order_session_rate_pct: 2.3085
+  - search_group: searched
+    session_count: 73136
+    purchasing_session_count: 3583
+    completed_order_session_rate_pct: 4.8991
+accepted_final_answer:
+  required_conclusion:
+  - The answer correctly identifies searched as the highest observed completed order session rate pct
+    and reports the reviewed values without material contradiction.
+  required_recommendation:
+  - Investigate query intent, traffic mix, and the downstream funnel before concluding that search itself
+    changes purchase behavior.
+  acceptable_semantic_variation: true
+  prohibited_claims:
+  - The descriptive result proves a causal explanation.
+  - The analysis establishes a business target that was not supplied.
+headline_grade:
+  output_contract_required: true
+  deterministic_accuracy_required: true
+  final_answer_judge_required: true
+  formula: output_contract AND deterministic_accuracy AND final_answer_judge

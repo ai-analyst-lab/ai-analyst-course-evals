@@ -1,0 +1,3 @@
+promo_name,start_date,end_date,promo_days,completed_order_count,discounted_merchandise_value,merchandise_cost,merchandise_gross_profit,gross_profit_per_day
+Black Friday,2024-11-25,2024-12-01,7,2387,117239.00,86793.53,30445.47,4349.35
+Holiday Sale,2024-12-15,2024-12-31,17,3520,220071.05,152784.60,67286.45,3958.03

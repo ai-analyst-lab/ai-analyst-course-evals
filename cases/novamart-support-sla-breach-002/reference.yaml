@@ -1,0 +1,51 @@
+case_id: novamart-support-sla-breach-002
+case_version: '1'
+status: proposed
+visibility: private-reference
+verified_at: '2026-09-24'
+review_status: computationally_verified_pending_instructor_review
+slices:
+  domain: support
+  task_type: recurring_review
+  complexity: high
+  data_shape: single_table
+  primary_risk: missing_business_definition
+source:
+  platform: snowflake
+  database: BOOTCAMP_DB
+  schema: NOVAMART
+  tables:
+  - SUPPORT_TICKETS
+  table_fingerprint:
+    method: sha256_of_ordered_table_row_counts
+    value: fdeb62d623a6200aa9f3d5c05408be1ffe4714d25084f5e17b8558a24c05d3a3
+expected:
+  results:
+  - month: 2024-10
+    ticket_count: 3023
+    breached_ticket_count: 277
+    breach_rate_pct: 9.16
+  - month: 2024-11
+    ticket_count: 3141
+    breached_ticket_count: 294
+    breach_rate_pct: 9.36
+  - month: 2024-12
+    ticket_count: 3583
+    breached_ticket_count: 283
+    breach_rate_pct: 7.9
+accepted_final_answer:
+  required_conclusion:
+  - The answer correctly identifies 2024-11 as the highest observed breach rate pct and reports the reviewed
+    values without material contradiction.
+  required_recommendation:
+  - Investigate severity mix, unresolved tickets, and the ticket categories contributing to the highest
+    breach-rate month before changing staffing or service policy.
+  acceptable_semantic_variation: true
+  prohibited_claims:
+  - The descriptive result proves a causal explanation.
+  - The analysis establishes a business target that was not supplied.
+headline_grade:
+  output_contract_required: true
+  deterministic_accuracy_required: true
+  final_answer_judge_required: true
+  formula: output_contract AND deterministic_accuracy AND final_answer_judge

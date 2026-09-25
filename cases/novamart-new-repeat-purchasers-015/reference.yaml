@@ -1,0 +1,54 @@
+case_id: novamart-new-repeat-purchasers-015
+case_version: '1'
+status: proposed
+visibility: private-reference
+verified_at: '2026-09-24'
+review_status: computationally_verified_pending_instructor_review
+slices:
+  domain: growth
+  task_type: cohort_review
+  complexity: high
+  data_shape: multi_table
+  primary_risk: time_boundary
+source:
+  platform: snowflake
+  database: BOOTCAMP_DB
+  schema: NOVAMART
+  tables:
+  - ORDERS
+  table_fingerprint:
+    method: sha256_of_ordered_table_row_counts
+    value: fdeb62d623a6200aa9f3d5c05408be1ffe4714d25084f5e17b8558a24c05d3a3
+expected:
+  results:
+  - month: 2024-10
+    completed_purchasers: 4417
+    first_time_purchasers: 2875
+    returning_purchasers: 1542
+    first_time_share_pct: 65.09
+  - month: 2024-11
+    completed_purchasers: 5682
+    first_time_purchasers: 3551
+    returning_purchasers: 2131
+    first_time_share_pct: 62.5
+  - month: 2024-12
+    completed_purchasers: 5833
+    first_time_purchasers: 3693
+    returning_purchasers: 2140
+    first_time_share_pct: 63.31
+accepted_final_answer:
+  required_conclusion:
+  - The answer correctly identifies 2024-10 as the highest observed first time share pct and reports the
+    reviewed values without material contradiction.
+  required_recommendation:
+  - Investigate acquisition sources and purchase timing behind the highest first-time share without interpreting
+    the mix as retention.
+  acceptable_semantic_variation: true
+  prohibited_claims:
+  - The descriptive result proves a causal explanation.
+  - The analysis establishes a business target that was not supplied.
+headline_grade:
+  output_contract_required: true
+  deterministic_accuracy_required: true
+  final_answer_judge_required: true
+  formula: output_contract AND deterministic_accuracy AND final_answer_judge

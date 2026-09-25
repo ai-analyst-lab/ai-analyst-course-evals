@@ -1,0 +1,63 @@
+case_id: novamart-support-category-008
+case_version: '1'
+status: proposed
+visibility: private-reference
+verified_at: '2026-09-24'
+review_status: computationally_verified_pending_instructor_review
+slices:
+  domain: support
+  task_type: segment_review
+  complexity: medium
+  data_shape: single_table
+  primary_risk: missingness
+source:
+  platform: snowflake
+  database: BOOTCAMP_DB
+  schema: NOVAMART
+  tables:
+  - SUPPORT_TICKETS
+  table_fingerprint:
+    method: sha256_of_ordered_table_row_counts
+    value: fdeb62d623a6200aa9f3d5c05408be1ffe4714d25084f5e17b8558a24c05d3a3
+expected:
+  results:
+  - category: account_issue
+    ticket_count: 1498
+    resolved_ticket_count: 1424
+    median_resolution_hours: 24.19
+  - category: delivery_issue
+    ticket_count: 2965
+    resolved_ticket_count: 2820
+    median_resolution_hours: 24.85
+  - category: membership_issue
+    ticket_count: 496
+    resolved_ticket_count: 474
+    median_resolution_hours: 24.68
+  - category: other
+    ticket_count: 490
+    resolved_ticket_count: 454
+    median_resolution_hours: 23.16
+  - category: payment_issue
+    ticket_count: 2406
+    resolved_ticket_count: 2304
+    median_resolution_hours: 23.69
+  - category: product_quality
+    ticket_count: 1892
+    resolved_ticket_count: 1795
+    median_resolution_hours: 23.98
+accepted_final_answer:
+  required_conclusion:
+  - The answer correctly identifies delivery_issue as the highest observed ticket count and reports the
+    reviewed values without material contradiction.
+  required_recommendation:
+  - Investigate the drivers of the highest-volume category and separately examine categories with slow
+    resolution rather than assuming volume explains duration.
+  acceptable_semantic_variation: true
+  prohibited_claims:
+  - The descriptive result proves a causal explanation.
+  - The analysis establishes a business target that was not supplied.
+headline_grade:
+  output_contract_required: true
+  deterministic_accuracy_required: true
+  final_answer_judge_required: true
+  formula: output_contract AND deterministic_accuracy AND final_answer_judge

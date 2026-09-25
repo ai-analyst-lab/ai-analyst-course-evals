@@ -1,0 +1,47 @@
+case_id: novamart-plus-order-value-006
+case_version: '1'
+status: proposed
+visibility: private-reference
+verified_at: '2026-09-24'
+review_status: computationally_verified_pending_instructor_review
+slices:
+  domain: membership
+  task_type: segment_review
+  complexity: low
+  data_shape: single_table
+  primary_risk: directionality
+source:
+  platform: snowflake
+  database: BOOTCAMP_DB
+  schema: NOVAMART
+  tables:
+  - ORDERS
+  table_fingerprint:
+    method: sha256_of_ordered_table_row_counts
+    value: fdeb62d623a6200aa9f3d5c05408be1ffe4714d25084f5e17b8558a24c05d3a3
+expected:
+  results:
+  - member_group: Non-Plus
+    completed_order_count: 16373
+    completed_order_value: 1234727.39
+    average_completed_order_value: 75.41
+  - member_group: Plus
+    completed_order_count: 562
+    completed_order_value: 41113.69
+    average_completed_order_value: 73.16
+accepted_final_answer:
+  required_conclusion:
+  - The answer correctly identifies Non-Plus as the highest observed average completed order value and
+    reports the reviewed values without material contradiction.
+  required_recommendation:
+  - Investigate customer and product mix behind the observed average-order-value difference rather than
+    attributing it to membership status.
+  acceptable_semantic_variation: true
+  prohibited_claims:
+  - The descriptive result proves a causal explanation.
+  - The analysis establishes a business target that was not supplied.
+headline_grade:
+  output_contract_required: true
+  deterministic_accuracy_required: true
+  final_answer_judge_required: true
+  formula: output_contract AND deterministic_accuracy AND final_answer_judge

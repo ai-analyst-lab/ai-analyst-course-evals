@@ -1,0 +1,76 @@
+schema_version: "1"
+case_id: novamart-quarterly-net-revenue-002
+case_version: "1"
+
+artifact_contract:
+  required_files: [result.json, monthly-net-revenue.csv, brief.md, chart.png, chart-data.csv, calculation.sql]
+  exact_file_set: true
+  result_json:
+    path: result.json
+    case_id: novamart-quarterly-net-revenue-002
+    required_sections: [case_id, period, monthly_results, october_to_december, definition, final_answer, methodology, artifacts]
+  csv:
+    - id: monthly_results
+      path: monthly-net-revenue.csv
+      columns: [month, net_revenue]
+      min_rows: 3
+      max_rows: 3
+    - id: chart_data
+      path: chart-data.csv
+      columns: [month, net_revenue]
+      min_rows: 3
+      max_rows: 3
+  image: {path: chart.png, min_width: 400, min_height: 250}
+  text: {path: brief.md, min_characters: 100}
+
+query_outputs:
+  - output_id: monthly_results
+    submission_sql: calculation.sql
+    reference_sql: reference.sql
+    submitted_table: monthly-net-revenue.csv
+    allowed_sources:
+      - BOOTCAMP_DB.NOVAMART.ORDERS
+    timeout_seconds: 60
+    max_rows: 100
+    diagnostic_rules:
+      date_boundary: {all_of: ["2024-10-01", "2025-01-01"]}
+      status_treatment: {all_of: ["COMPLETED", "RETURNED"]}
+      metric_definition: {all_of: ["TOTAL_AMOUNT", "CASE", "SUM"]}
+    comparison:
+      mode: keyed_table
+      keys: [month]
+      columns:
+        month: {type: string}
+        net_revenue: {type: decimal, absolute_tolerance: 0.01}
+
+cross_artifact_tables:
+  - id: chart_data_matches_monthly_results
+    left: {type: csv, path: monthly-net-revenue.csv}
+    right: {type: csv, path: chart-data.csv}
+    comparison:
+      mode: keyed_table
+      keys: [month]
+      columns:
+        month: {type: string}
+        net_revenue: {type: decimal, absolute_tolerance: 0.01}
+  - id: result_json_matches_monthly_results
+    left: {type: csv, path: monthly-net-revenue.csv}
+    right: {type: json_table, path: result.json, field: monthly_results}
+    comparison:
+      mode: keyed_table
+      keys: [month]
+      columns:
+        month: {type: string}
+        net_revenue: {type: decimal, absolute_tolerance: 0.01}
+
+model_graders:
+  - id: final_answer.v1
+    rubric: course_evals/graders/model/final_answer/v1/rubric.md
+    evidence: {result_json_field: final_answer, brief: brief.md}
+    criteria_reference_field: accepted_final_answer
+    blocking: true
+
+diagnostics: [source_selection, date_boundary, metric_definition, status_treatment, query_correctness, validation_checks, query_to_finding_linkage, trace_completeness]
+
+headline:
+  required: [artifact_contract, sql_result, cross_artifact_consistency, final_answer.v1]

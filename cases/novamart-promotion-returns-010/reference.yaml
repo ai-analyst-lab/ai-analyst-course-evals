@@ -1,0 +1,52 @@
+case_id: novamart-promotion-returns-010
+case_version: '1'
+status: proposed
+visibility: private-reference
+verified_at: '2026-09-24'
+review_status: computationally_verified_pending_instructor_review
+slices:
+  domain: marketing
+  task_type: campaign_review
+  complexity: medium
+  data_shape: multi_table
+  primary_risk: population
+source:
+  platform: snowflake
+  database: BOOTCAMP_DB
+  schema: NOVAMART
+  tables:
+  - ORDERS
+  - PROMOTIONS
+  table_fingerprint:
+    method: sha256_of_ordered_table_row_counts
+    value: fdeb62d623a6200aa9f3d5c05408be1ffe4714d25084f5e17b8558a24c05d3a3
+expected:
+  results:
+  - promo_name: Black Friday
+    completed_order_count: 2387
+    returned_order_count: 75
+    returned_share_pct: 3.05
+    completed_order_value: 131243.62
+    returned_order_value: 4946.97
+  - promo_name: Holiday Sale
+    completed_order_count: 3520
+    returned_order_count: 226
+    returned_share_pct: 6.03
+    completed_order_value: 240532.89
+    returned_order_value: 16665.41
+accepted_final_answer:
+  required_conclusion:
+  - The answer correctly identifies Holiday Sale as the highest observed returned share pct and reports
+    the reviewed values without material contradiction.
+  required_recommendation:
+  - Investigate product, customer, and discount mix behind the higher returned share before changing promotion
+    strategy.
+  acceptable_semantic_variation: true
+  prohibited_claims:
+  - The descriptive result proves a causal explanation.
+  - The analysis establishes a business target that was not supplied.
+headline_grade:
+  output_contract_required: true
+  deterministic_accuracy_required: true
+  final_answer_judge_required: true
+  formula: output_contract AND deterministic_accuracy AND final_answer_judge

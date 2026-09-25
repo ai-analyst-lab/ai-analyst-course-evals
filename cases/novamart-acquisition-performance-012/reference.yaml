@@ -1,0 +1,70 @@
+case_id: novamart-acquisition-performance-012
+case_version: '1'
+status: proposed
+visibility: private-reference
+verified_at: '2026-09-24'
+review_status: computationally_verified_pending_instructor_review
+slices:
+  domain: growth
+  task_type: segment_review
+  complexity: high
+  data_shape: multi_table
+  primary_risk: unit_of_analysis
+source:
+  platform: snowflake
+  database: BOOTCAMP_DB
+  schema: NOVAMART
+  tables:
+  - USERS
+  - ORDERS
+  table_fingerprint:
+    method: sha256_of_ordered_table_row_counts
+    value: fdeb62d623a6200aa9f3d5c05408be1ffe4714d25084f5e17b8558a24c05d3a3
+expected:
+  results:
+  - acquisition_channel: email
+    purchaser_count: 1260
+    completed_order_count: 1446
+    completed_order_value: 111333.32
+    average_completed_order_value: 76.99
+  - acquisition_channel: organic
+    purchaser_count: 3968
+    completed_order_count: 4659
+    completed_order_value: 349529.03
+    average_completed_order_value: 75.02
+  - acquisition_channel: paid_search
+    purchaser_count: 3204
+    completed_order_count: 3734
+    completed_order_value: 279618.36
+    average_completed_order_value: 74.88
+  - acquisition_channel: referral
+    purchaser_count: 1351
+    completed_order_count: 1571
+    completed_order_value: 121163.96
+    average_completed_order_value: 77.13
+  - acquisition_channel: social
+    purchaser_count: 1826
+    completed_order_count: 2113
+    completed_order_value: 157312.64
+    average_completed_order_value: 74.45
+  - acquisition_channel: tiktok_ads
+    purchaser_count: 2947
+    completed_order_count: 3412
+    completed_order_value: 256883.77
+    average_completed_order_value: 75.29
+accepted_final_answer:
+  required_conclusion:
+  - The answer correctly identifies organic as the highest observed completed order value and reports
+    the reviewed values without material contradiction.
+  required_recommendation:
+  - Investigate purchaser volume, repeat behavior, customer mix, and acquisition cost before changing
+    channel investment.
+  acceptable_semantic_variation: true
+  prohibited_claims:
+  - The descriptive result proves a causal explanation.
+  - The analysis establishes a business target that was not supplied.
+headline_grade:
+  output_contract_required: true
+  deterministic_accuracy_required: true
+  final_answer_judge_required: true
+  formula: output_contract AND deterministic_accuracy AND final_answer_judge

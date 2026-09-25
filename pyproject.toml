@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ai-analyst-course-evals"
+version = "0.2.0"
+description = "Versioned graders and references for the AI Analyst course"
+requires-python = ">=3.11"
+dependencies = [
+  "Pillow>=10",
+  "PyYAML>=6",
+  "python-dotenv>=1",
+  "snowflake-connector-python>=3.12",
+  "sqlglot>=26,<28",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.setuptools.packages.find]
+include = ["course_evals*"]

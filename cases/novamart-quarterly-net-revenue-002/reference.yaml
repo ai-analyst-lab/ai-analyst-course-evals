@@ -1,0 +1,87 @@
+case_id: novamart-quarterly-net-revenue-002
+case_version: "1"
+status: proposed
+visibility: private-reference
+verified_at: "2026-09-24"
+review_status: pending_second_human_review
+
+slices:
+  domain: finance
+  task_type: recurring_review
+  complexity: medium
+  data_shape: single_table
+  primary_risk: missing_business_definition
+
+source:
+  platform: snowflake
+  database: BOOTCAMP_DB
+  schema: NOVAMART
+  table: ORDERS
+  role: BOOTCAMP_STUDENT
+  warehouse: BOOTCAMP_WH
+  table_fingerprint:
+    method: sha256_of_pipe_delimited_row_count_min_date_max_date_distinct_order_count_total_amount_sum
+    value: e3878063bee620c1706f346d12ffbbec2665b5d50448102afa2ae22304ff1c2f
+    row_count: 47199
+    min_order_date: "2024-01-02"
+    max_order_date: "2025-01-01"
+    distinct_order_count: 47199
+    total_amount_sum: 3696372.54
+
+scope:
+  date_field: order_date
+  start: "2024-10-01"
+  end_exclusive: "2025-01-01"
+  unit_of_analysis: one row per order
+  value_field: total_amount
+  approved_definition: >-
+    Net revenue is settlement value from completed orders minus settlement
+    value from returned orders. Cancelled orders are excluded.
+  rejected_definitions:
+    - Completed-order value without subtracting returned orders.
+    - total_amount minus discount_amount because total_amount is already after discounts.
+    - Completed, returned, and cancelled order value combined.
+
+expected:
+  monthly_results:
+    - {month: "2024-10", net_revenue: 359780.17}
+    - {month: "2024-11", net_revenue: 414537.26}
+    - {month: "2024-12", net_revenue: 423936.03}
+  october_to_december:
+    absolute_change: 64155.86
+    percent_change: 17.831961111141855
+  strongest_month: "2024-12"
+
+tolerances:
+  currency_absolute: 0.01
+  percent_change_absolute_percentage_points: 0.01
+
+accepted_final_answer:
+  required_conclusion:
+    - December had the highest Q4 net revenue.
+    - Net revenue increased from October to December 2024.
+    - The calculation subtracts returned-order settlement value from completed-order settlement value.
+  required_recommendation:
+    - Investigate the contributors to completed-order value and returned-order value separately before acting on the increase.
+  acceptable_semantic_variation: true
+  prohibited_claims:
+    - Completed-order value alone is NovaMart net revenue.
+    - Cancelled orders should be subtracted as returns.
+    - discount_amount should be subtracted from total_amount again.
+    - This descriptive result proves why net revenue changed.
+
+headline_grade:
+  output_contract_required: true
+  deterministic_accuracy_required: true
+  final_answer_judge_required: true
+  formula: output_contract AND deterministic_accuracy AND final_answer_judge
+
+diagnostics:
+  - source_selection
+  - date_boundary
+  - metric_definition
+  - status_treatment
+  - query_correctness
+  - validation_checks
+  - query_to_finding_linkage
+  - trace_completeness

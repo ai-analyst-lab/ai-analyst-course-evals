@@ -1,0 +1,64 @@
+case_id: novamart-repeat-purchase-channel-007
+case_version: '1'
+status: proposed
+visibility: private-reference
+verified_at: '2026-09-24'
+review_status: computationally_verified_pending_instructor_review
+slices:
+  domain: growth
+  task_type: segment_review
+  complexity: high
+  data_shape: multi_table
+  primary_risk: unit_of_analysis
+source:
+  platform: snowflake
+  database: BOOTCAMP_DB
+  schema: NOVAMART
+  tables:
+  - USERS
+  - ORDERS
+  table_fingerprint:
+    method: sha256_of_ordered_table_row_counts
+    value: fdeb62d623a6200aa9f3d5c05408be1ffe4714d25084f5e17b8558a24c05d3a3
+expected:
+  results:
+  - acquisition_channel: email
+    purchaser_count: 1260
+    repeat_purchaser_count: 174
+    repeat_purchase_rate_pct: 13.81
+  - acquisition_channel: organic
+    purchaser_count: 3968
+    repeat_purchaser_count: 611
+    repeat_purchase_rate_pct: 15.4
+  - acquisition_channel: paid_search
+    purchaser_count: 3204
+    repeat_purchaser_count: 473
+    repeat_purchase_rate_pct: 14.76
+  - acquisition_channel: referral
+    purchaser_count: 1351
+    repeat_purchaser_count: 195
+    repeat_purchase_rate_pct: 14.43
+  - acquisition_channel: social
+    purchaser_count: 1826
+    repeat_purchaser_count: 257
+    repeat_purchase_rate_pct: 14.07
+  - acquisition_channel: tiktok_ads
+    purchaser_count: 2947
+    repeat_purchaser_count: 426
+    repeat_purchase_rate_pct: 14.46
+accepted_final_answer:
+  required_conclusion:
+  - The answer correctly identifies organic as the highest observed repeat purchase rate pct and reports
+    the reviewed values without material contradiction.
+  required_recommendation:
+  - Investigate customer mix, order timing, and offer exposure in the highest-rate channel before reallocating
+    acquisition spend.
+  acceptable_semantic_variation: true
+  prohibited_claims:
+  - The descriptive result proves a causal explanation.
+  - The analysis establishes a business target that was not supplied.
+headline_grade:
+  output_contract_required: true
+  deterministic_accuracy_required: true
+  final_answer_judge_required: true
+  formula: output_contract AND deterministic_accuracy AND final_answer_judge

@@ -1,0 +1,48 @@
+case_id: novamart-weekend-orders-014
+case_version: '1'
+status: proposed
+visibility: private-reference
+verified_at: '2026-09-24'
+review_status: computationally_verified_pending_instructor_review
+slices:
+  domain: operations
+  task_type: segment_review
+  complexity: medium
+  data_shape: multi_table
+  primary_risk: date_mapping
+source:
+  platform: snowflake
+  database: BOOTCAMP_DB
+  schema: NOVAMART
+  tables:
+  - ORDERS
+  - CALENDAR
+  table_fingerprint:
+    method: sha256_of_ordered_table_row_counts
+    value: fdeb62d623a6200aa9f3d5c05408be1ffe4714d25084f5e17b8558a24c05d3a3
+expected:
+  results:
+  - day_type: weekday
+    completed_order_count: 12063
+    completed_order_value: 917616.55
+    average_completed_order_value: 76.07
+  - day_type: weekend
+    completed_order_count: 4872
+    completed_order_value: 358224.53
+    average_completed_order_value: 73.53
+accepted_final_answer:
+  required_conclusion:
+  - The answer correctly identifies weekday as the highest observed average completed order value and
+    reports the reviewed values without material contradiction.
+  required_recommendation:
+  - Investigate product, promotion, and customer mix behind the observed day-type difference before changing
+    operating plans.
+  acceptable_semantic_variation: true
+  prohibited_claims:
+  - The descriptive result proves a causal explanation.
+  - The analysis establishes a business target that was not supplied.
+headline_grade:
+  output_contract_required: true
+  deterministic_accuracy_required: true
+  final_answer_judge_required: true
+  formula: output_contract AND deterministic_accuracy AND final_answer_judge

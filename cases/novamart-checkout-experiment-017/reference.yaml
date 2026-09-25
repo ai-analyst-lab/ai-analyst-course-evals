@@ -1,0 +1,51 @@
+case_id: novamart-checkout-experiment-017
+case_version: '1'
+status: proposed
+visibility: private-reference
+verified_at: '2026-09-24'
+review_status: computationally_verified_pending_instructor_review
+slices:
+  domain: experimentation
+  task_type: experiment_readout
+  complexity: high
+  data_shape: multi_table
+  primary_risk: exposure_window
+source:
+  platform: snowflake
+  database: BOOTCAMP_DB
+  schema: NOVAMART
+  tables:
+  - EXPERIMENTS
+  - EXPERIMENT_ASSIGNMENTS
+  - ORDERS
+  table_fingerprint:
+    method: sha256_of_ordered_table_row_counts
+    value: fdeb62d623a6200aa9f3d5c05408be1ffe4714d25084f5e17b8558a24c05d3a3
+expected:
+  results:
+  - variant: control
+    assigned_users: 5000
+    completed_purchasers: 597
+    completed_purchaser_rate_pct: 11.94
+    completed_order_value: 42634.59
+  - variant: treatment
+    assigned_users: 5000
+    completed_purchasers: 590
+    completed_purchaser_rate_pct: 11.8
+    completed_order_value: 43480.91
+accepted_final_answer:
+  required_conclusion:
+  - The answer correctly identifies control as the highest observed completed purchaser rate pct and reports
+    the reviewed values without material contradiction.
+  required_recommendation:
+  - Run the planned statistical evaluation, check assignment quality and guardrails, and review uncertainty
+    before making a launch decision.
+  acceptable_semantic_variation: true
+  prohibited_claims:
+  - The descriptive result proves a causal explanation.
+  - The analysis establishes a business target that was not supplied.
+headline_grade:
+  output_contract_required: true
+  deterministic_accuracy_required: true
+  final_answer_judge_required: true
+  formula: output_contract AND deterministic_accuracy AND final_answer_judge

@@ -1,0 +1,61 @@
+{
+  "case_id": "novamart-promotion-profitability-002",
+  "promotion_results": [
+    {
+      "promo_name": "Black Friday",
+      "start_date": "2024-11-25",
+      "end_date": "2024-12-01",
+      "promo_days": 7,
+      "completed_order_count": 2387,
+      "discounted_merchandise_value": 117239.0,
+      "merchandise_cost": 86793.53,
+      "merchandise_gross_profit": 30445.47,
+      "gross_profit_per_day": 4349.35
+    },
+    {
+      "promo_name": "Holiday Sale",
+      "start_date": "2024-12-15",
+      "end_date": "2024-12-31",
+      "promo_days": 17,
+      "completed_order_count": 3520,
+      "discounted_merchandise_value": 220071.05,
+      "merchandise_cost": 152784.6,
+      "merchandise_gross_profit": 67286.45,
+      "gross_profit_per_day": 3958.03
+    }
+  ],
+  "final_answer": {
+    "conclusion": "Holiday Sale produced more total completed-order merchandise gross profit, while Black Friday produced more merchandise gross profit per promotion day because it ran for fewer days.",
+    "recommended_next_step": "Investigate incremental demand, cannibalization, customer mix, and costs not represented in merchandise cost before choosing which promotion to repeat.",
+    "supporting_facts": [
+      "Holiday Sale produced $67,286.45 in merchandise gross profit versus $30,445.47 for Black Friday.",
+      "Black Friday produced $4,349.35 per promotion day versus $3,958.03 for Holiday Sale."
+    ],
+    "important_limitation": "This descriptive comparison does not establish incremental profit or causation."
+  },
+  "methodology": {
+    "analysis_type": "descriptive",
+    "population": "Completed NovaMart orders associated with Black Friday or Holiday Sale.",
+    "grain": "One output row per promotion after calculating merchandise gross profit at the item level.",
+    "joins": [
+      "orders.promo_id to promotions.promo_id",
+      "orders.order_id to order_items.order_id",
+      "order_items.product_id to products.product_id"
+    ],
+    "calculation_summary": "Sum line_total minus quantity multiplied by product cost, then divide by inclusive promotion days.",
+    "validation_checks": [
+      "Counted distinct orders after the item-level join.",
+      "Reconciled discounted merchandise value to order subtotal less order discount."
+    ],
+    "assumptions": [
+      "Product cost is the available merchandise cost and excludes marketing, shipping, and other company costs."
+    ]
+  },
+  "artifacts": {
+    "promotion_results": "promotion-results.csv",
+    "brief": "brief.md",
+    "chart": "chart.png",
+    "chart_data": "chart-data.csv",
+    "calculation": "calculation.sql"
+  }
+}
