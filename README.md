@@ -31,11 +31,23 @@ The first course run should be completed and locked before students receive this
 
 Do not describe later runs of these cases as held out. A company-grade held-out set should remain in a separate repository or service that the evaluated system cannot access. It should be used only to test whether improvements generalize beyond the development cases.
 
+## Repository map
+
+- `cases/`: reference answers and grading configuration for the two current course suites.
+- `course-cases.yaml`: exact case IDs, versions and paths for those suites.
+- `course_evals/`: reusable deterministic graders, model judges and reporting code.
+- `tests/`: offline software tests. `tests/fixtures/` contains a historical promotion example used only to test the grader, not an additional student assignment.
+- `focused-cases/`: the optional eight-question SQL exercise from Session 6.
+
+Generated grades belong in the corresponding AI Analyst run under `working/evals/`. Instructor experiments, draft context stores and rehearsal outputs are not part of this student checkout.
+
 ## Current cases
 
 The primary Session 6 development set contains 20 complete-analysis cases. Their public tasks live in the sibling AI Analyst repository under `evals/cases/public/`. This repository contains one reviewed reference package per case under `cases/`.
 
-`novamart-support-sla-breach-002` is the live harder case. Its public task does not reveal NovaMart's severity-specific SLA definition. The evaluated output is still graded normally. Missing context is not a separate failure gate.
+Session 8 adds 16 SQL/results cases in `evals/suites/session-8-context-repair.yaml` in AI Analyst. These evaluate calculations, not reports, charts or recommendations. The two suites contain 36 distinct case IDs in total. Keep their scores separate. Resource IDs containing `week4-` are retained where the current Session 8 suite uses them as controls; names do not make them obsolete.
+
+`novamart-support-sla-breach-002` is part of Session 6's suite. Its public task does not reveal NovaMart's severity-specific SLA definition. The evaluated output is still graded normally. Missing context is not a separate failure gate.
 
 The focused SQL suite remains available under `focused-cases/` as an optional component-level development tool. It is not the primary Session 6 system-accuracy set.
 
@@ -49,7 +61,6 @@ With the course Snowflake credentials available through the AI Analyst `.env` fi
 
 ```bash
 .venv/bin/python cases/novamart-monthly-operating-review-001/validate_reference.py
-.venv/bin/python cases/novamart-promotion-profitability-002/validate_reference.py
 ```
 
 ## What the SQL grader does

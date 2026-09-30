@@ -1,0 +1,46 @@
+case_id: session8-query-promotion-value-monthly
+case_version: '1'
+evaluation_mode: sql_results
+slices:
+  domain: commerce
+  complexity: medium
+  query_route: adapted
+  primary_risk: organization_specific_definition
+expected:
+  results:
+  - segment: 2024-10
+    value: '106605.93'
+  - segment: 2024-11
+    value: '194017.87'
+  - segment: 2024-12
+    value: '288984.66'
+coverage:
+  family: query_library
+  role: target
+  scenario: promotion_attributed_calendar_month_value
+  queries:
+  - commerce-promotion-attributed-value
+  guides: []
+  intervention: reviewed_query
+review_status: engineering_test_user_authorized_fictional_policy_and_independent_accounting_identity
+source:
+  platform: snowflake
+  database: BOOTCAMP_DB
+  schema: NOVAMART
+  table_fingerprint:
+    value: c7e6b8580027b9c9f090eeb68c9bd476232553ebc9338199f301817121d51ea0
+policy: 'Fictional NovaMart classroom policy, explicitly selected by the user-authorized
+  instructor experiment on 2026-09-29, not inferred from warehouse data and not human
+  production approval. Promotion-attributed order value is completed-order merchandise
+  amount after the order discount, excluding shipping: SUBTOTAL minus DISCOUNT_AMOUNT.
+  Only orders with non-null PROMO_ID are attributed. Attribution means the order carries
+  that promotion identifier, not causal incremental lift. The reporting interval uses
+  ORDER_DATE and does not require a second promotion schedule filter. Exclude cancelled/returned
+  orders. Sum at order grain, then round the final monetary total to two decimals.
+  The current question groups by DEVICE. This question groups the unchanged order-grain
+  amount by calendar ORDER_DATE month across Q4 2024. Empty qualifying groups are
+  absent, not fabricated as zero.'
+provenance:
+  independent_evidence_sha256: fc59362381db42f34e2aa346dc351d8b11d794c6963c3de5be5ee2e8a5ac1689
+  pre_worker_policy_sha256: a94d75f957e4aff154dc45f621857e5c2f5807dcea0ba742812f8186291219f6
+  monthly_independent_evidence_sha256: 0a1f0b5a298b83e03082e7d2433a2a9e07450a8b55ed6332d97bbcc7bf6837c9

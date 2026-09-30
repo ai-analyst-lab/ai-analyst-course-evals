@@ -1,0 +1,40 @@
+case_id: session8-semantic-purchase-conversion-monthly
+case_version: probe-1
+evaluation_mode: sql_results
+review_status: experimental_engineering_review_independent_source_counts
+policy_status: user_authorized_fictional_growth_definition
+reviewed_on: '2026-09-29'
+slices:
+  domain: growth
+  complexity: high
+coverage:
+  family: semantic_purchase_conversion
+  role: target
+  transfer: true
+  intervention: guide_and_semantic_model
+  metrics:
+  - growth-session-purchase-conversion
+source:
+  platform: snowflake
+  database: BOOTCAMP_DB
+  schema: NOVAMART
+  table_fingerprint:
+    value: c7e6b8580027b9c9f090eeb68c9bd476232553ebc9338199f301817121d51ea0
+expected:
+  results:
+  - segment: 2024-10
+    value: '2.8964'
+  - segment: 2024-11
+    value: '3.3131'
+  - segment: 2024-12
+    value: '2.9314'
+policy: Each browsing session counts once. A session converts when at least one purchase-completion
+  event is recorded for it. Use session reporting date and device. Order completion/returns
+  and the stored session summary flag are not this event definition.
+provenance:
+  independent_query_id: 01c761ff-0208-a698-000e-b58e00392a4a
+  source_counts_sha256: bc052b21bda75ff0371f4acc025888f2d0d3f879fb10cde1b468176d650e356d
+  reference_sql_sha256: 1eb9e6cee8735acfdca636acc4c363098bb823c5e66154a70e4ffa0d9f01aa38
+  source_counts: ai-analyst/working/session-8/semantic-conversion-pilot-02/feasibility/comparison.json
+  note: Counts were captured before semantic implementation. Monthly rates aggregate
+    counts, not device percentages. No production owner approval claimed.

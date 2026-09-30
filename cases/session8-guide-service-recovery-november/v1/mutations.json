@@ -1,0 +1,10 @@
+{
+  "all_support_instead_of_service_recovery": {
+    "rows": [
+      {
+        "segment": "2024-11",
+        "value": 3141
+      }
+    ]
+  }
+}

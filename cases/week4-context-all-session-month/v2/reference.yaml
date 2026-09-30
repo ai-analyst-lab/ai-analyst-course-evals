@@ -1,0 +1,19 @@
+case_id: week4-context-all-session-month
+evaluation_mode: sql_results
+review_status: machine_validation_pending_instructor_policy_and_reference_review
+slices:
+  domain: product
+  complexity: low
+coverage:
+  family: meaning
+  role: near_miss
+  guides: []
+  intervention: V1
+policy_status: fictional_proposal_not_instructor_approved
+case_version: '2'
+source:
+  platform: snowflake
+  database: BOOTCAMP_DB
+  schema: NOVAMART
+  table_fingerprint:
+    value: c7e6b8580027b9c9f090eeb68c9bd476232553ebc9338199f301817121d51ea0

@@ -1,0 +1,35 @@
+case_id: session8-live-guide-account-service-severity
+evaluation_mode: sql_results
+review_status: engineering_sql_and_independent_source_aggregation_checked_not_instructor_approved
+slices:
+  domain: support
+  complexity: medium
+coverage:
+  family: vocabulary
+  role: target
+  guides:
+  - support-account-service
+  intervention: guide
+policy_status: fictional_proposal_not_instructor_approved
+case_version: '1'
+source:
+  platform: snowflake
+  database: BOOTCAMP_DB
+  schema: NOVAMART
+  table_fingerprint:
+    value: c7e6b8580027b9c9f090eeb68c9bd476232553ebc9338199f301817121d51ea0
+expected:
+  results:
+  - segment: critical
+    value: 96
+  - segment: high
+    value: 385
+  - segment: low
+    value: 788
+  - segment: medium
+    value: 725
+provenance:
+  query_id: 01c76635-0208-b425-000e-b58e003a185a
+  source_sha256: 17c55afbc49ee35e0da9052a58c40b1e01684a4fbd06eb6b8cd826a13e6217cc
+  parent: week4-context-account-service/v2
+  check: Independent Python category filter/group aggregation; unique ticket IDs verified

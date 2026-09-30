@@ -1,0 +1,19 @@
+case_id: week4-expanded-all-completed
+family: meaning
+domain: commerce
+complexity: low
+scenario: explicit-completed
+task: Count all completed Q4 orders by month, regardless of discount or basket size.
+role: near_miss
+transfer: false
+guides: []
+reference_sql: 'WITH observations AS (SELECT TO_CHAR(o.order_date, ''YYYY-MM'') AS segment, 1 AS measure FROM BOOTCAMP_DB.NOVAMART.ORDERS
+  o WHERE o.order_date >= ''2024-10-01'' AND o.order_date < ''2025-01-01'' AND o.status=''completed'') SELECT segment,
+  ROUND(SUM(measure),4) AS value FROM observations GROUP BY segment ORDER BY segment;
+
+  '
+raw_sql: SELECT TO_CHAR(o.order_date, 'YYYY-MM') AS segment, 1 AS measure FROM BOOTCAMP_DB.NOVAMART.ORDERS o WHERE
+  o.order_date >= '2024-10-01' AND o.order_date < '2025-01-01' AND o.status='completed'
+operation: sum
+value_type: integer
+intervention: source

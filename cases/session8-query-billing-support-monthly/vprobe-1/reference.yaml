@@ -1,0 +1,19 @@
+case_id: session8-query-billing-support-monthly
+case_version: probe-1
+evaluation_mode: sql_results
+review_status: independent_sql_python_engineering_verified_not_instructor_approved
+policy_status: explicit_hypothetical_engineering_test_definition
+slices:
+  domain: support
+  complexity: low
+coverage:
+  family: billing_support
+  role: transfer
+  intervention: query
+source:
+  platform: snowflake
+  database: BOOTCAMP_DB
+  schema: NOVAMART
+  table_fingerprint:
+    value: c7e6b8580027b9c9f090eeb68c9bd476232553ebc9338199f301817121d51ea0
+evidence: /Users/shanebutler/projects/ai-analyst/working/session-8/query-billing-09/family-01/independent-reference/reference.json

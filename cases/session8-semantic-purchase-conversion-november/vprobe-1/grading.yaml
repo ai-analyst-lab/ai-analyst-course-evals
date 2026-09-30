@@ -1,0 +1,68 @@
+case_id: session8-semantic-purchase-conversion-november
+evaluation_mode: sql_results
+artifact_contract:
+  required_files:
+  - result.json
+  - results.csv
+  - calculation.sql
+  exact_file_set: true
+  result_json:
+    path: result.json
+    case_id: session8-semantic-purchase-conversion-november
+    required_sections:
+    - case_id
+    - analysis_id
+    - context_files
+    - artifacts
+  csv:
+  - id: results
+    path: results.csv
+    columns:
+    - segment
+    - value
+    min_rows: 1
+    max_rows: 100
+query_outputs:
+- output_id: result
+  submission_sql: calculation.sql
+  reference_sql: reference.sql
+  submitted_table: results.csv
+  allowed_sources:
+  - BOOTCAMP_DB.NOVAMART.CALENDAR
+  - BOOTCAMP_DB.NOVAMART.EVENTS
+  - BOOTCAMP_DB.NOVAMART.EXPERIMENTS
+  - BOOTCAMP_DB.NOVAMART.EXPERIMENT_ASSIGNMENTS
+  - BOOTCAMP_DB.NOVAMART.MEMBERSHIPS
+  - BOOTCAMP_DB.NOVAMART.NPS_RESPONSES
+  - BOOTCAMP_DB.NOVAMART.ORDERS
+  - BOOTCAMP_DB.NOVAMART.ORDER_ITEMS
+  - BOOTCAMP_DB.NOVAMART.PRODUCTS
+  - BOOTCAMP_DB.NOVAMART.PROMOTIONS
+  - BOOTCAMP_DB.NOVAMART.SESSIONS
+  - BOOTCAMP_DB.NOVAMART.SUPPORT_TICKETS
+  - BOOTCAMP_DB.NOVAMART.USERS
+  timeout_seconds: 90
+  max_rows: 100
+  comparison_version: '2'
+  comparison:
+    mode: keyed_table
+    keys:
+    - segment
+    columns:
+      segment:
+        type: string
+      value:
+        type: decimal
+        absolute_tolerance: 0
+  expected_sources:
+  - BOOTCAMP_DB.NOVAMART.SESSIONS
+model_graders: []
+cross_artifact_tables: []
+diagnostics:
+- query_correctness
+- trace_completeness
+headline:
+  required:
+  - artifact_contract
+  - sql_result
+case_version: probe-1

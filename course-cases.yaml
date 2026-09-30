@@ -1,0 +1,152 @@
+description: Student development cases; public tasks remain in AI Analyst.
+suites:
+  session-6-complete-analysis:
+    suite_version: '1'
+    cases:
+    - case_id: novamart-monthly-operating-review-001
+      case_version: '1'
+      reference_path: cases/novamart-monthly-operating-review-001
+      public_path: evals/cases/public/novamart-monthly-operating-review-001/v1
+    - case_id: novamart-support-sla-breach-002
+      case_version: '1'
+      reference_path: cases/novamart-support-sla-breach-002
+      public_path: evals/cases/public/novamart-support-sla-breach-002/v1
+    - case_id: novamart-support-resolution-003
+      case_version: '1'
+      reference_path: cases/novamart-support-resolution-003
+      public_path: evals/cases/public/novamart-support-resolution-003/v1
+    - case_id: novamart-nps-segment-004
+      case_version: '1'
+      reference_path: cases/novamart-nps-segment-004
+      public_path: evals/cases/public/novamart-nps-segment-004/v1
+    - case_id: novamart-session-conversion-device-005
+      case_version: '1'
+      reference_path: cases/novamart-session-conversion-device-005
+      public_path: evals/cases/public/novamart-session-conversion-device-005/v1
+    - case_id: novamart-plus-order-value-006
+      case_version: '1'
+      reference_path: cases/novamart-plus-order-value-006
+      public_path: evals/cases/public/novamart-plus-order-value-006/v1
+    - case_id: novamart-repeat-purchase-channel-007
+      case_version: '1'
+      reference_path: cases/novamart-repeat-purchase-channel-007
+      public_path: evals/cases/public/novamart-repeat-purchase-channel-007/v1
+    - case_id: novamart-support-category-008
+      case_version: '1'
+      reference_path: cases/novamart-support-category-008
+      public_path: evals/cases/public/novamart-support-category-008/v1
+    - case_id: novamart-search-session-009
+      case_version: '1'
+      reference_path: cases/novamart-search-session-009
+      public_path: evals/cases/public/novamart-search-session-009/v1
+    - case_id: novamart-promotion-returns-010
+      case_version: '1'
+      reference_path: cases/novamart-promotion-returns-010
+      public_path: evals/cases/public/novamart-promotion-returns-010/v1
+    - case_id: novamart-category-profit-011
+      case_version: '1'
+      reference_path: cases/novamart-category-profit-011
+      public_path: evals/cases/public/novamart-category-profit-011/v1
+    - case_id: novamart-acquisition-performance-012
+      case_version: '1'
+      reference_path: cases/novamart-acquisition-performance-012
+      public_path: evals/cases/public/novamart-acquisition-performance-012/v1
+    - case_id: novamart-app-version-support-013
+      case_version: '1'
+      reference_path: cases/novamart-app-version-support-013
+      public_path: evals/cases/public/novamart-app-version-support-013/v1
+    - case_id: novamart-weekend-orders-014
+      case_version: '1'
+      reference_path: cases/novamart-weekend-orders-014
+      public_path: evals/cases/public/novamart-weekend-orders-014/v1
+    - case_id: novamart-new-repeat-purchasers-015
+      case_version: '1'
+      reference_path: cases/novamart-new-repeat-purchasers-015
+      public_path: evals/cases/public/novamart-new-repeat-purchasers-015/v1
+    - case_id: novamart-membership-cancellation-016
+      case_version: '1'
+      reference_path: cases/novamart-membership-cancellation-016
+      public_path: evals/cases/public/novamart-membership-cancellation-016/v1
+    - case_id: novamart-checkout-experiment-017
+      case_version: '1'
+      reference_path: cases/novamart-checkout-experiment-017
+      public_path: evals/cases/public/novamart-checkout-experiment-017/v1
+    - case_id: novamart-cancellation-device-018
+      case_version: '1'
+      reference_path: cases/novamart-cancellation-device-018
+      public_path: evals/cases/public/novamart-cancellation-device-018/v1
+    - case_id: novamart-device-funnel-019
+      case_version: '1'
+      reference_path: cases/novamart-device-funnel-019
+      public_path: evals/cases/public/novamart-device-funnel-019/v1
+    - case_id: novamart-holiday-order-mix-020
+      case_version: '1'
+      reference_path: cases/novamart-holiday-order-mix-020
+      public_path: evals/cases/public/novamart-holiday-order-mix-020/v1
+  session-8-context-repair:
+    suite_version: '4'
+    cases:
+    - case_id: session8-guide-service-recovery-november
+      case_version: '1'
+      reference_path: cases/session8-guide-service-recovery-november/v1
+      public_path: evals/cases/public/session8-guide-service-recovery-november/v1
+    - case_id: session8-guide-service-recovery-monthly
+      case_version: '1'
+      reference_path: cases/session8-guide-service-recovery-monthly/v1
+      public_path: evals/cases/public/session8-guide-service-recovery-monthly/v1
+    - case_id: session8-live-guide-account-service-severity
+      case_version: '1'
+      reference_path: cases/session8-live-guide-account-service-severity/v1
+      public_path: evals/cases/public/session8-live-guide-account-service-severity/v1
+    - case_id: session8-live-guide-account-service-month
+      case_version: '1'
+      reference_path: cases/session8-live-guide-account-service-month/v1
+      public_path: evals/cases/public/session8-live-guide-account-service-month/v1
+    - case_id: session8-semantic-purchase-conversion-november
+      case_version: probe-1
+      reference_path: cases/session8-semantic-purchase-conversion-november/vprobe-1
+      public_path: evals/cases/public/session8-semantic-purchase-conversion-november/probe-1
+    - case_id: session8-semantic-purchase-conversion-monthly
+      case_version: probe-1
+      reference_path: cases/session8-semantic-purchase-conversion-monthly/vprobe-1
+      public_path: evals/cases/public/session8-semantic-purchase-conversion-monthly/probe-1
+    - case_id: session8-semantic-paid-response-nps-q4
+      case_version: probe-1
+      reference_path: cases/session8-semantic-paid-response-nps-q4/vprobe-1
+      public_path: evals/cases/public/session8-semantic-paid-response-nps-q4/probe-1
+    - case_id: session8-semantic-paid-response-nps-monthly
+      case_version: probe-1
+      reference_path: cases/session8-semantic-paid-response-nps-monthly/vprobe-1
+      public_path: evals/cases/public/session8-semantic-paid-response-nps-monthly/probe-1
+    - case_id: session8-query-billing-support-total
+      case_version: probe-1
+      reference_path: cases/session8-query-billing-support-total/vprobe-1
+      public_path: evals/cases/public/session8-query-billing-support-total/probe-1
+    - case_id: session8-query-billing-support-monthly
+      case_version: probe-1
+      reference_path: cases/session8-query-billing-support-monthly/vprobe-1
+      public_path: evals/cases/public/session8-query-billing-support-monthly/probe-1
+    - case_id: session8-query-promotion-count-device
+      case_version: '1'
+      reference_path: cases/session8-query-promotion-count-device/v1
+      public_path: evals/cases/public/session8-query-promotion-count-device/v1
+    - case_id: session8-query-promotion-value-device
+      case_version: '1'
+      reference_path: cases/session8-query-promotion-value-device/v1
+      public_path: evals/cases/public/session8-query-promotion-value-device/v1
+    - case_id: session8-query-promotion-value-monthly
+      case_version: '1'
+      reference_path: cases/session8-query-promotion-value-monthly/v1
+      public_path: evals/cases/public/session8-query-promotion-value-monthly/v1
+    - case_id: week4-context-all-session-month
+      case_version: '2'
+      reference_path: cases/week4-context-all-session-month/v2
+      public_path: evals/cases/public/week4-context-all-session-month/v2
+    - case_id: week4-expanded-ticket-count-not-credit
+      case_version: '2'
+      reference_path: cases/week4-expanded-ticket-count-not-credit/v2
+      public_path: evals/cases/public/week4-expanded-ticket-count-not-credit/v2
+    - case_id: week4-expanded-all-completed
+      case_version: '2'
+      reference_path: cases/week4-expanded-all-completed/v2
+      public_path: evals/cases/public/week4-expanded-all-completed/v2

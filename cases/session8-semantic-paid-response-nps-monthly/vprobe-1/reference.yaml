@@ -1,0 +1,38 @@
+case_id: session8-semantic-paid-response-nps-monthly
+case_version: probe-1
+evaluation_mode: sql_results
+review_status: experimental_engineering_review_independent_SQL_and_Python
+policy_status: user_authorized_fictional_research_definition
+reviewed_on: '2026-09-29'
+slices:
+  domain: customer_research
+  complexity: high
+coverage:
+  family: semantic_paid_response_nps
+  role: target
+  transfer: true
+  intervention: guide_and_semantic_model
+  metrics:
+  - research-paid-response-nps
+source:
+  platform: snowflake
+  database: BOOTCAMP_DB
+  schema: NOVAMART
+  table_fingerprint:
+    value: c7e6b8580027b9c9f090eeb68c9bd476232553ebc9338199f301817121d51ea0
+expected:
+  results:
+  - segment: '2024-10-01'
+    value: '66.6667'
+  - segment: '2024-11-01'
+    value: '64.2857'
+  - segment: '2024-12-01'
+    value: '12.5000'
+policy: Paid access at start of recorded response day, continuous conversion-to-cancellation
+  lifecycle; response-grain promoter-minus-detractor NPS including passives.
+provenance:
+  independent_query_id: 01c76508-0208-b431-000e-b58e0039d006
+  reference_sql_sha256: e3110799b238c49d33ed7f48e4fdd0f3eb99c7015fae761721a30b463c8a8637
+  source_evidence: /Users/shanebutler/projects/ai-analyst/working/session-8/semantic-second-candidate-02/nps-matched-01/reference/reference.json
+  note: SQL EXISTS and independent Python lifecycle classification; no production-owner
+    review claimed

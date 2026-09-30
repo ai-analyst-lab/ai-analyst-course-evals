@@ -15,9 +15,12 @@ import yaml
 from .graders.deterministic.artifact_contract import grade_artifact_contract
 from .graders.deterministic.cross_artifact import csv_result, grade_cross_table, json_table_result
 from .graders.deterministic.sql.compare_v1 import compare_results
+from .graders.deterministic.sql.compare_v2 import compare_results as compare_results_v2
+from .graders.deterministic.sql.artifact_v2 import compare_candidate_csv
+from .graders.deterministic.sql.standalone_v1 import inspect_standalone
 from .graders.deterministic.sql.diagnostics_v1 import diagnose_sql
 from .graders.deterministic.sql.execute_v1 import SnowflakeExecutor
-from .graders.deterministic.sql.safety_v1 import inspect_sql
+from .graders.deterministic.sql.safety_v2 import inspect_sql
 from .runners.model import run_model_judge
 
 
@@ -119,6 +122,9 @@ def verify_lock(trial_root: Path) -> tuple[dict[str, Any], Path]:
 
 def load_case(case_id: str, case_version: str) -> tuple[Path, dict[str, Any], dict[str, Any]]:
     case_root = REPO_ROOT / "cases" / case_id
+    version_root = case_root / f"v{case_version}"
+    if version_root.is_dir():
+        case_root = version_root
     reference_path = case_root / "reference.yaml"
     if not reference_path.is_file():
         raise ValueError(f"course reference is missing for {case_id}")
@@ -194,6 +200,8 @@ def render_reports(trial_root: Path, summary: dict[str, Any]) -> None:
         ("Deterministic accuracy", summary["deterministic_accuracy"]),
         ("Conclusion and recommendation", summary["final_answer_judge"]),
     ]
+    if summary.get("evaluation_mode") == "sql_results":
+        gates = gates[:2]
     lines = [
         f"# Evaluation report: {summary['case_id']}",
         "",
@@ -268,6 +276,10 @@ def _grade_query_outputs(
     result_grades: list[dict[str, Any]] = []
     diagnostic_grades: list[dict[str, Any]] = []
     for output in grading.get("query_outputs") or []:
+        comparison_version = str(output.get("comparison_version", "1"))
+        if comparison_version not in {"1", "2"}:
+            raise ValueError("unknown SQL comparison version")
+        compare = compare_results_v2 if comparison_version == "2" else compare_results
         output_id = output["output_id"]
         candidate_sql = (submission / output["submission_sql"]).read_text(encoding="utf-8")
         reference_sql = (case_root / output["reference_sql"]).read_text(encoding="utf-8")
@@ -277,8 +289,8 @@ def _grade_query_outputs(
             prohibited_functions=output.get("prohibited_functions") or [],
         )
         safety_record = {
-            "grader_id": "sql.safety.v1",
-            "grader_version": "1",
+            "grader_id": "sql.safety.v2",
+            "grader_version": "2",
             "output_id": output_id,
             "submission_sha256": hashlib.sha256(candidate_sql.encode()).hexdigest(),
             **safety.as_dict(),
@@ -289,7 +301,8 @@ def _grade_query_outputs(
                 candidate_sql,
                 reference_sql,
                 {
-                    "expected_sources": output.get("allowed_sources") or [],
+                    # Permission to use a table is not a requirement to use it.
+                    "expected_sources": output.get("expected_sources") or list(inspect_sql(reference_sql).sources),
                     "declared": grading.get("diagnostics") or [],
                     "rules": output.get("diagnostic_rules") or {},
                 },
@@ -306,6 +319,11 @@ def _grade_query_outputs(
                 "mismatches": [{"code": "sql_safety", "violations": list(safety.violations)}],
             })
             continue
+        standalone = inspect_standalone(candidate_sql)
+        standalone.update(output_id=output_id, candidate_sql_sha256=hashlib.sha256(candidate_sql.encode()).hexdigest())
+        result_grades.append(standalone)
+        if not standalone["pass"]:
+            continue
         active_executor = executor or SnowflakeExecutor(
             project_root=_project_root(manifest, run_root),
             timeout_seconds=int(output.get("timeout_seconds", 60)),
@@ -315,7 +333,7 @@ def _grade_query_outputs(
         try:
             actual = active_executor.execute(candidate_sql)
             expected = active_executor.execute(reference_sql)
-            result = compare_results(actual, expected, output["comparison"])
+            result = compare(actual, expected, output["comparison"])
             result.update({
                 "output_id": output_id,
                 "candidate_query_id": actual.query_id,
@@ -327,13 +345,16 @@ def _grade_query_outputs(
             })
             submitted_table = output.get("submitted_table")
             if submitted_table:
-                artifact_result = compare_results(
-                    actual,
-                    csv_result(submission / submitted_table),
-                    output["comparison"],
-                )
+                if comparison_version == "2":
+                    artifact_result = compare_candidate_csv(
+                        actual, submission / submitted_table, output["comparison"],
+                    )
+                else:
+                    artifact_result = compare(
+                        actual, csv_result(submission / submitted_table), output["comparison"],
+                    )
+                    artifact_result["grader_id"] = "artifact.matches_executed_sql.v1"
                 artifact_result.update({
-                    "grader_id": "artifact.matches_executed_sql.v1",
                     "output_id": output_id,
                     "artifact": submitted_table,
                     "candidate_query_id": actual.query_id,
@@ -341,8 +362,8 @@ def _grade_query_outputs(
                 result_grades.append(artifact_result)
         except Exception as exc:
             result = {
-                "grader_id": f"sql.result.{output['comparison']['mode']}.v1",
-                "grader_version": "1",
+                "grader_id": f"sql.result.{output['comparison']['mode']}.v{comparison_version}",
+                "grader_version": comparison_version,
                 "output_id": output_id,
                 "pass": 0,
                 "status": "error",
@@ -381,6 +402,11 @@ def grade_run(
         raise ValueError("this trial already has grade records; create a new run instead of overwriting them")
     trial, submission = verify_lock(trial_root)
     case_root, reference, grading = load_case(trial["case_id"], trial["case_version"])
+    mode = grading.get("evaluation_mode", "full_analysis")
+    if mode not in {"full_analysis", "sql_results"} or mode != manifest.get("evaluation_mode", "full_analysis"):
+        raise ValueError("run and grader evaluation modes must agree")
+    if mode == "sql_results" and (grading.get("model_graders") or grading.get("cross_artifact_tables")):
+        raise ValueError("SQL/results cases must not request model or full-analysis cross-artifact graders")
     data_fingerprint = manifest.get("data_fingerprint") or {}
     expected_data_fingerprint = reference["source"]["table_fingerprint"]["value"]
     if data_fingerprint.get("status") != "verified":
@@ -422,8 +448,10 @@ def grade_run(
     cross_artifact = int(all(record["pass"] for record in cross_grades))
     deterministic_accuracy = int(sql_safety and sql_result and cross_artifact)
     blocking_model_grades = [record for record in model_grades if record["blocking"]]
-    final_answer_judge = int(bool(blocking_model_grades) and all(record["pass"] for record in blocking_model_grades))
-    case_pass = int(output_contract and deterministic_accuracy and final_answer_judge)
+    final_answer_judge = (None if mode == "sql_results" else
+                          int(bool(blocking_model_grades) and all(record["pass"] for record in blocking_model_grades)))
+    case_pass = int(output_contract and deterministic_accuracy and
+                    (mode == "sql_results" or final_answer_judge))
     diagnostic_by_id: dict[str, dict[str, Any]] = {}
     for diagnostic in sql_diagnostics:
         for check in diagnostic.get("checks") or []:
@@ -468,6 +496,7 @@ def grade_run(
         ],
     }
     summary = {
+        "evaluation_mode": mode,
         "schema_version": "1",
         "run_id": trial["run_id"],
         "trial_id": trial["trial_id"],
@@ -483,10 +512,18 @@ def grade_run(
         "deterministic_accuracy": deterministic_accuracy,
         "final_answer_judge": final_answer_judge,
         "case_pass": case_pass,
-        "judge_reason": " ".join(record["reason"] for record in blocking_model_grades),
+        "judge_reason": ("Not assessed: this case measures SQL/result accuracy, not conclusions or recommendations."
+                         if mode == "sql_results" else " ".join(record["reason"] for record in blocking_model_grades)),
         "grader_versions": {
+            "grading_config_sha256": digest_payload(grading),
+            "reference_metadata_sha256": digest_payload(reference),
+            "reference_sql_sha256": digest_payload({output['reference_sql']: digest_file(case_root / output['reference_sql']) for output in grading.get('query_outputs', [])}),
             "artifact_contract": artifact_grade.get("grader_version", "1"),
-            "sql": "1",
+            "sql": ",".join(sorted({str(o.get('comparison_version', '1')) for o in grading.get('query_outputs', [])})),
+            # Record configured versions even when an earlier gate blocks execution.
+            "sql_artifact": ",".join(sorted({"2.1" if str(o.get("comparison_version", "1")) == "2" else "1"
+                                             for o in grading.get("query_outputs", []) if o.get("submitted_table")})),
+            "sql_submission": "1" if grading.get("query_outputs") else "",
             "final_answer_judge": ",".join(record.get("grader_version", "1") for record in blocking_model_grades),
             "judge_model": ",".join(record.get("model", judge_model) for record in blocking_model_grades),
             "judge_prompt_sha256": ",".join(

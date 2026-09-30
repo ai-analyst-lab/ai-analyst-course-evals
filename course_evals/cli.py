@@ -5,6 +5,7 @@ import json
 
 from .orchestrator import grade_run
 from .suite import build_suite_report, grade_complete_suite_manifest
+from .compare_suites import compare_suites
 
 
 def main() -> None:
@@ -24,6 +25,10 @@ def main() -> None:
     grade_suite.add_argument("--manifest", required=True)
     grade_suite.add_argument("--judge-model", default="claude-opus-4-6")
     grade_suite.add_argument("--parallelism", type=int, default=4)
+    compare = subparsers.add_parser('compare-suites', help='Compare matched SQL/results suite manifests')
+    compare.add_argument('--before', required=True)
+    compare.add_argument('--after', required=True)
+    compare.add_argument('--allowed-runtime-change', action='append', default=[])
     args = parser.parse_args()
     if args.command == "grade":
         result = grade_run(
@@ -37,6 +42,8 @@ def main() -> None:
             output_root=args.output,
             suite_id=args.suite_id,
         )
+    elif args.command == 'compare-suites':
+        result = compare_suites(args.before, args.after, allowed_runtime_changes=args.allowed_runtime_change)
     else:
         result = grade_complete_suite_manifest(
             manifest_path=args.manifest,

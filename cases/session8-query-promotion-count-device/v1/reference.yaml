@@ -1,0 +1,43 @@
+case_id: session8-query-promotion-count-device
+case_version: '1'
+evaluation_mode: sql_results
+slices:
+  domain: commerce
+  complexity: medium
+  query_route: adapted
+  primary_risk: organization_specific_definition
+expected:
+  results:
+  - segment: android
+    value: 836
+  - segment: ios
+    value: 1102
+  - segment: web
+    value: 1376
+coverage:
+  family: query_library
+  role: target
+  scenario: promotion_attributed_order_count_by_device
+  queries:
+  - commerce-promotion-attributed-value
+  guides: []
+  intervention: reviewed_query
+review_status: engineering_test_user_authorized_existing_population_and_independent_exact_order_ids
+source:
+  platform: snowflake
+  database: BOOTCAMP_DB
+  schema: NOVAMART
+  table_fingerprint:
+    value: c7e6b8580027b9c9f090eeb68c9bd476232553ebc9338199f301817121d51ea0
+policy: 'User-authorized fictional classroom experiment, not a data-inferred business
+  policy or human production signoff. Count orders in the same governed population
+  as the pre-existing promotion-attributed-value query: STATUS completed and PROMO_ID
+  non-null, reported by ORDER_DATE in a half-open interval. Count each ORDER_ID once
+  within its original DEVICE. This changes amount aggregation to order count, not
+  eligibility. Recorded promotion tags are descriptive attribution, not causal lift.
+  No extra promotion-schedule filter. Empty qualifying groups are absent. The public
+  task permits an honest missing-definition response; such a response is not a numerical
+  error.'
+provenance:
+  independent_evidence_sha256: 03cbfe935fa6a270112018a761f5e46fd539d4ea01df3f2a1ea8e8eb8bf8c284
+  source_fingerprint_sha256: 16d0845fbe5155c291067e5febc45f34b9b1e2d85f687c2612bf8fd98f088681

@@ -1,0 +1,21 @@
+case_id: week4-expanded-ticket-count-not-credit
+evaluation_mode: sql_results
+review_status: machine_validation_pending_instructor_policy_and_reference_review
+slices:
+  domain: support
+  complexity: low
+coverage:
+  family: calculation
+  role: near_miss
+  scenario: count-not-credit
+  transfer: false
+  guides: []
+  intervention: executable
+policy_status: fictional_proposal_not_instructor_approved
+case_version: '2'
+source:
+  platform: snowflake
+  database: BOOTCAMP_DB
+  schema: NOVAMART
+  table_fingerprint:
+    value: c7e6b8580027b9c9f090eeb68c9bd476232553ebc9338199f301817121d51ea0

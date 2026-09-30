@@ -1,0 +1,89 @@
+case_id: session8-guide-service-recovery-november
+case_version: '1'
+evaluation_mode: sql_results
+review_status: engineering_reference_review_independent_sql_python_exact_id_verified
+policy_status: prior_course_owner_approved_fictional_support_definition
+reviewed_on: '2026-09-29'
+slices:
+  domain: support
+  complexity: medium
+coverage:
+  family: business_terminology
+  role: target
+  scenario: recovery_november
+  transfer: false
+  guides:
+  - support-service-recovery
+  intervention: guide
+source:
+  platform: snowflake
+  database: BOOTCAMP_DB
+  schema: NOVAMART
+  table_fingerprint:
+    value: c7e6b8580027b9c9f090eeb68c9bd476232553ebc9338199f301817121d51ea0
+expected:
+  results:
+  - segment: 2024-11
+    value: 2345
+policy: 'Service-recovery demand counts support tickets about payment, delivery or
+
+  product-quality problems. It is a subset of support demand, not every ticket.
+
+
+  Include tickets categorized as payment issues, delivery issues or product
+
+  quality. Exclude account issues, membership issues and other categories.
+
+  A missing or unrecognized category does not
+
+  establish that the ticket belongs to service recovery; flag it if present.
+
+
+  Count each ticket once, not distinct customers or orders. Tickets without a
+
+  linked order still count when their category qualifies.
+
+
+  A reporting period refers to tickets received in that period: use the stored
+
+  ticket-created calendar date, with an inclusive start and exclusive end. Do not
+
+  use the resolution date to determine when the ticket was received. Include open and
+
+  resolved tickets; do not add severity, device or status restrictions unless
+
+  the question asks for them.
+
+
+  For a question about all support tickets or a particular literal category,
+
+  use that requested population instead of imposing this service-recovery group.
+
+  Ticket demand alone does not establish customer satisfaction or recovery success.
+
+  '
+provenance:
+  reference_query_id: 01c76371-0208-9959-000e-b58e003949ae
+  analysis_id: an_20260928_22ab
+  reference_query_text_sha256: 1993e7118b2bfe011fdf7454636a47dde352a6d5e06a3fe26208cfb19dad502b
+  reference_sql_sha256: d2cec6be82caac6ade940665787901d58b7b78c26139ca396ac1d9240984d95e
+  reference_evidence: ai-analyst/working/session-8/guide-family-reference-02/evidence.json
+  reference_evidence_sha256: 78ef778f66315ae5998072999f8d3526213c4c2b640dcd76fb8c154873ea763d
+  source_extract_query_ids:
+  - 01c76371-0208-9957-000e-b58e00393a7a
+  - 01c76371-0208-9957-000e-b58e00393a7e
+  crosscheck: Independent Python category classification and exact ticket-ID reconciliation
+    across Q4; then monthly counts
+  guide_content_sha256: 35278ff0924adc48499035fbe226ae8f7d3bd0c29f10a07a8a0fdbdf5b0ac86d
+  guide_original_review:
+    after: '2027-03-28'
+    by: Course owner
+    content_hash: 2b298a97bb2668007f6af982ad76afec768fb6e933572074eca26e8677df85a5
+    'on': '2026-09-28'
+  historical_evidence: November guide-pilot-01 demonstrated guide repair; existing probe-1
+    public/private contracts remain unchanged.
+  caveat: Development references, not held-out evidence. New monthly cases have not yet
+    run with a model. Historical membership pilot inherited growth-engagement guidance;
+    it is not proof of the final retention-only cumulative baseline. Standard comparator
+    normalizes column names; strict warehouse aliases and actual context use must be separately
+    audited. No fresh production-owner or human SQL sign-off is claimed.

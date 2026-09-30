@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import shutil
+import copy
 from pathlib import Path
 
 import pytest
@@ -12,7 +13,56 @@ from course_evals.graders.deterministic.sql.execute_v1 import QueryResult
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 CASE_ROOT = REPO_ROOT / "cases" / "novamart-monthly-operating-review-001"
-PROMOTION_CASE_ROOT = REPO_ROOT / "cases" / "novamart-promotion-profitability-002"
+PROMOTION_CASE_ROOT = REPO_ROOT / "tests" / "fixtures" / "cases" / "novamart-promotion-profitability-002"
+
+
+def test_sql_mode_grades_without_calling_model_judge(tmp_path, monkeypatch):
+    import course_evals.grader as module
+    run = build_run(tmp_path)
+    manifest_path = run / 'manifest.json'
+    manifest = json.loads(manifest_path.read_text())
+    manifest['evaluation_mode'] = 'sql_results'
+    manifest_path.write_text(json.dumps(manifest))
+    case_root, reference, grading = module.load_case('novamart-monthly-operating-review-001', '1')
+    grading = copy.deepcopy(grading)
+    grading.update(evaluation_mode='sql_results', model_graders=[], cross_artifact_tables=[])
+    grading['query_outputs'][0]['comparison_version'] = '2'
+    monkeypatch.setattr(module, 'load_case', lambda *args: (case_root, reference, grading))
+    def no_judge(**kwargs):
+        raise AssertionError('SQL/result mode must not call a model')
+    summary = grade_run(run_root=run, judge=no_judge, sql_executor=FakeSqlExecutor())
+    assert summary['case_pass'] == 1
+    assert summary['final_answer_judge'] is None
+    assert summary['evaluation_mode'] == 'sql_results'
+
+
+def test_all_csv_grader_configs_have_required_identifiers():
+    import yaml
+    for path in (REPO_ROOT / 'cases').rglob('grading.yaml'):
+        config = yaml.safe_load(path.read_text())
+        for spec in config.get('artifact_contract', {}).get('csv', []):
+            assert spec.get('id'), str(path)
+
+
+def test_versioned_sql_cases_preserve_original_reference(tmp_path, monkeypatch):
+    import yaml
+    import course_evals.grader as module
+    case_id = 'version-routing-fixture'
+    for version in ('1', '2'):
+        destination = tmp_path / 'cases' / case_id / ('v' + version)
+        shutil.copytree(CASE_ROOT, destination)
+        for name in ('reference.yaml', 'grading.yaml'):
+            path = destination / name
+            data = yaml.safe_load(path.read_text())
+            data.update(case_id=case_id, case_version=version)
+            path.write_text(yaml.safe_dump(data))
+    monkeypatch.setattr(module, 'REPO_ROOT', tmp_path)
+    root1, ref1, config1 = module.load_case(case_id, '1')
+    root2, ref2, config2 = module.load_case(case_id, '2')
+    assert root1 != root2
+    assert ref1['case_version'] == '1' and ref2['case_version'] == '2'
+    assert (root1 / 'reference.sql').read_bytes() == (root2 / 'reference.sql').read_bytes()
+    assert config1['query_outputs'] == config2['query_outputs']
 
 
 def test_generated_complete_cases_keep_reference_and_grader_together():
@@ -249,7 +299,10 @@ def test_wrong_number_fails_accuracy(tmp_path):
     assert summary["case_pass"] == 0
 
 
-def test_second_case_uses_generic_grading_pipeline(tmp_path):
+def test_second_case_uses_generic_grading_pipeline(tmp_path, monkeypatch):
+    import course_evals.grader as module
+    # Historical promotion output is a test fixture, not a student case.
+    monkeypatch.setattr(module, 'REPO_ROOT', REPO_ROOT / 'tests' / 'fixtures')
     run_root = build_promotion_run(tmp_path)
     summary = grade_run(
         run_root=run_root,

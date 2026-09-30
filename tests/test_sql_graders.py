@@ -35,6 +35,22 @@ def test_different_queries_with_same_result_are_safe_and_comparable():
     assert compare_results(left, right, KEYED)["pass"] == 1
 
 
+def test_allowed_sources_are_not_all_required_by_diagnostic(tmp_path):
+    from course_evals.grader import _grade_query_outputs
+    query='SELECT COUNT(*) AS value FROM DB.SCHEMA.ORDERS'
+    (tmp_path/'calculation.sql').write_text(query)
+    (tmp_path/'reference.sql').write_text(query)
+    class Executor:
+        def execute(self,sql):
+            return result(['value'],[[2]])
+    _,_,diagnostics=_grade_query_outputs(submission=tmp_path,case_root=tmp_path,run_root=tmp_path,manifest={},executor=Executor(),grading={
+        'diagnostics':['source_selection'], 'query_outputs':[{
+            'output_id':'test','submission_sql':'calculation.sql','reference_sql':'reference.sql',
+            'allowed_sources':['DB.SCHEMA.ORDERS','DB.SCHEMA.USERS'], 'comparison_version':'2',
+            'comparison':{'mode':'scalar','columns':{'value':{'type':'integer'}}}}]})
+    assert diagnostics[0]['checks'][0]['status']=='pass'
+
+
 def test_keyed_table_ignores_row_order_and_applies_tolerance():
     left = result(["month", "count", "value"], [["2024-11", 3, 20.001], ["2024-10", 2, 10.0]])
     right = result(["month", "count", "value"], [["2024-10", 2, 10.0], ["2024-11", 3, 20.0]])
